@@ -24,11 +24,7 @@ export default function Home() {
                                 </Link>
                             </div>
                         </div>
-                        <h1 className="md:text-7xl my-4 font-extrabold text-4xl md:leading-tight">Create perfect
-                            projects
-                            with
-                            this landing
-                            page!</h1>
+                        <h1 className="md:text-7xl my-4 font-extrabold text-4xl md:leading-tight">SAP Stock!</h1>
                         <p className="mx-auto my-4 text-sm w-full max-w-xl text-center font-medium leading-relaxed tracking-wide">
                             This is a landing page template that you can use to create a beautiful website. It is
                             designed
@@ -115,7 +111,7 @@ export default function Home() {
             </section>
 
             {/* Pricing */}
-
+             {/*               
             <section
                 className="border-b dark border-border bg-background">
                 <div className="container mx-auto text-center">
@@ -156,7 +152,7 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-
+                */}
         </>
     );
 }

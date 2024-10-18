@@ -3,6 +3,7 @@ import yfinance as yf
 from flask_cors import CORS  # Import CORS
 from sentiment_analysis import SentimentAnalysis
 from web_scrape import NewsScrapper
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -55,11 +56,16 @@ def stock_data(symbol):
 
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
-    ticker = request.form.get("ticker")
-    news = NewsScrapper(
-        "https://finviz.com/quote.ashx?t=", ticker=ticker
-    ).run_scrapper()
-    sentiment = SentimentAnalysis(news).sentiment_analysis()
+    with open(r"backend/data/scraped_results.json", "r") as file:
+        news = json.load(file)
+
+    all_parsed_results = [item["parsed_result"] for item in news]
+
+    if not all_parsed_results:
+        return jsonify({"error": "No data found for sentiment analysis"}), 404
+
+    sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
+
     return jsonify(sentiment)
 
 

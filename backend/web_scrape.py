@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-# from langchain_google_genai import GoogleGenerativeAI
 
+# from langchain_google_genai import GoogleGenerativeAI
+import json
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
@@ -21,21 +22,17 @@ class NewsScrapper:
     def scrape_links(self):
         dr = webdriver.Chrome()
 
-        dr.get(self.url)  # Open the URL in the browser
+        dr.get(self.url)
 
-        # Parse the page source using BeautifulSoup
         soup = BeautifulSoup(dr.page_source, "html.parser")
 
-        # Extract all <a> tags with class "tab-link-news"
         links = soup.find_all("a", class_="tab-link-news")
 
-        # Extract the href attribute from each link
         soup_list = [link.get("href") for link in links]
-
-        # Close the browser
+        print(soup_list)
         dr.quit()
 
-        return soup_list
+        return soup_list[0:2]
 
     def scrape_website(self, url):
         print("Connecting to Scraping Browser...")
@@ -97,13 +94,15 @@ class NewsScrapper:
 
     def run_scrapper(self):
         results = []
+
         scraped_html = []
         links = self.scrape_links()
+
         for link in links:
             dom_content = self.scrape_website(link)
             scraped_html.append(dom_content)
 
-        for html in scraped_html:
+        for i, html in enumerate(scraped_html):
             body_content = self.extract_body_content(html)
             cleaned_content = self.clean_body_content(body_content)
             split_dom_content = self.split_dom_content(cleaned_content)
@@ -111,9 +110,12 @@ class NewsScrapper:
                 split_dom_content,
                 "Give me any News/Articles/Posts that are contained in this corpus of text",
             )
-            results.append(parsed_result)
+            results.append({"link": links[i], "parsed_result": parsed_result})
+
+        with open("data/scraped_results.json", "w") as json_file:
+            json.dump(results, json_file, indent=4)
+
         return results
-        # print(parsed_result)
 
 
 if __name__ == "__main__":

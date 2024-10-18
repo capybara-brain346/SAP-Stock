@@ -2,12 +2,14 @@ import os
 import logging
 from typing import List, Tuple
 from langchain_chroma import Chroma
+from langchain_community.document_loaders import JSONLoader
 from langchain.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
     PROMPT_TEMPLATE = """
@@ -26,15 +28,12 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
     {question}
     """
     try:
-        # Load the news data from a single file called "news.txt" in the "data" folder
-        news_file = r'backend\data\news.txt'
+        news_file = r"backend\data\scraped_results.json"
         news_context = ""
-        
-        # Load the news text data
-        with open(news_file, 'r', encoding='utf-8') as f:
+
+        with open(news_file, "r", encoding="utf-8") as f:
             news_context = f.read()
-        
-        # Initialize embeddings and database using Chroma and Google Embeddings
+
         db = Chroma(
             persist_directory="chroma_stock",
             embedding_function=GoogleGenerativeAIEmbeddings(
@@ -42,24 +41,17 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
             ),
         )
 
-        # Store the entire news context into Chroma
         db.add_texts([news_context])
 
-        # Perform similarity search using the embeddings
-        results = db.similarity_search_with_score(
-            stock_symbol, k=len(db.get()["ids"])
-        )
+        results = db.similarity_search_with_score(stock_symbol, k=len(db.get()["ids"]))
 
-        # Extract the relevant context
         context_text = " ".join([doc.page_content for doc, _score in results])
 
-        # Format the prompt with the news context
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
         prompt = prompt_template.format(
             stock_symbol=stock_symbol, context=context_text, question=question
         )
 
-        # Use Google Generative AI model for final question answering
         model = ChatGoogleGenerativeAI(
             model="gemini-1.5-flash", api_key=os.getenv("GOOGLE_API_KEY")
         )
@@ -74,13 +66,10 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
 
 
 def main() -> None:
-    # Stock symbol to analyze
     stock_symbol = "TATA"  # Example stock symbol
 
-    # Question related to sentiment analysis or stock news
     question = "What is the overall sentiment for this stock in the latest quarter?"
 
-    # Query the RAG system
     print(query_rag(stock_symbol=stock_symbol, question=question))
 
 

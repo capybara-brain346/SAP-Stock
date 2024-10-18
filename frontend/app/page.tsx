@@ -30,8 +30,7 @@ export default function Home() {
             const response = await axios.get(`http://127.0.0.1:5000/api/stock?symbol=${stockSymbol}`);
             const price = response.data.currentPrice; // Use `response.data.price` directly
             setStockPrice(price);
-            console.log(error)
-            console.log(price)
+            console.log(price);
         } catch (error) {
             console.error("Error fetching stock price:", error);
             setError("Error fetching stock price. Please check the symbol.");
@@ -61,29 +60,6 @@ export default function Home() {
                             This is a landing page template that you can use to create a beautiful website. It is
                             designed to be easy to use and customize.
                         </p>
-
-                        {/* Input Box for Stock Symbol */}
-                        <div className="flex flex-col items-center my-4">
-                            <input
-                                type="text"
-                                placeholder="Enter stock symbol (e.g., AAPL)"
-                                value={stockSymbol}
-                                onChange={(e) => setStockSymbol(e.target.value)}
-                                className="border rounded p-2"
-                            />
-                            <Button onClick={fetchStockPrice} className="mt-2" disabled={loading}>
-                                {loading ? "Fetching..." : "Get Stock Price"}
-                            </Button>
-                        </div>
-
-                        {/* Display Stock Price */}
-                        {stockPrice !== null && (
-                            <p className="mt-4 text-lg">
-                                Current Price: ${stockPrice.toFixed(2)}
-                            </p>
-                        )}
-                        
-                        {error && <p className="mt-4 text-red-500">{error}</p>}
 
                         <div className="flex flex-row justify-center items-center space-x-4 my-8">
                             <Button>
@@ -141,6 +117,32 @@ export default function Home() {
                     <div className="absolute top-24 right-0 w-1/2 h-56 bg-sky-600 rounded-full mix-blend-multiply opacity-70 animate-blob delay-1000 filter blur-3xl"></div>
                 </div>
             </section>
+
+            {/* Stock Price Input and Display Above Footer */}
+            <div className="flex flex-col items-center my-4">
+                <input
+                    type="text"
+                    placeholder="Enter stock symbol (e.g., AAPL)"
+                    value={stockSymbol}
+                    onChange={(e) => setStockSymbol(e.target.value)}
+                    className="border rounded p-2"
+                />
+                <Button onClick={fetchStockPrice} className="mt-2" disabled={loading}>
+                    {loading ? "Fetching..." : "Get Insights"}
+                </Button>
+                {/* Display Stock Price */}
+                {stockPrice !== null && (
+                    <p className="mt-4 text-lg">
+                        Regular Market Open: ${stockPrice.toFixed(2)}
+                    </p>
+                )}
+                {error && <p className="mt-4 text-red-500">{error}</p>}
+            </div>
+
+            {/* Footer */}
+            <footer className="border-t border-border p-4 text-center">
+                <p>&copy; 2024 Your Company Name. All rights reserved.</p>
+            </footer>
         </>
     );
 }

@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import time
-from selenium.webdriver import Remote, ChromeOptions
-from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from langchain_google_genai import GoogleGenerativeAI
 
 # from langchain_ollama import OllamaLLM
@@ -13,87 +13,31 @@ load_dotenv()
 
 
 class NewsScrapper:
-    def __init__(self, url, stock, source):
-        self.url = url
-        self.source = source
-        self.stock = stock
+    def __init__(self, site, ticker):
+        self.site = site
+        self.ticker = ticker
+        self.url = self.site + self.ticker
 
-    def get_yahoo(self):
-        URL = self.url + self.stock
+    def scrape_links(self):
+        dr = webdriver.Chrome()
+        dr.get(self.url)
+        # resp = requests.get(self.url)
+        # print(resp.text)
 
-        print(f"Fetching data from: {URL}")
-
-        # Fetch the page with stock data
-        resp_links = requests.get(url=URL)
-        if resp_links.status_code != 200:
-            print(f"Failed to fetch data from {URL}")
-            return
-
-        soup_links = BeautifulSoup(resp_links.text, "html.parser")
-
-        # Make sure to adjust the class to reflect the actual HTML structure
-        links = [
-            i.get("href")
-            for i in soup_links.find_all(
-                "a", class_="subtle-link fin-size-small titles noUnderline yf-1e4diqp"
-            )
+        soup = BeautifulSoup(dr.page_source, "html.parser")
+        # print(soup.find_all("a", class_="tab-link-news"))
+        soup_list = [
+            link.get("href") for link in soup.find_all("a", class_="tab-link-news")[0]
         ]
+        # print(soup_list)
+        return soup_list
 
-        # Validate if any links were found
-        if not links:
-            print("No news links found")
-            return
-
-        # Handle relative links
-        base_url = "https://finance.yahoo.com"
-        links = [link if link.startswith("http") else base_url + link for link in links]
-
-        print(f"Found {len(links)} news articles")
-
-        # Fetch news articles from links
-        for news in links:
-            time.sleep(0.5)
-            # try:
-            resp_articles = requests.get(news)
-            print(resp_articles.text)
-            #     if resp_articles.status_code != 200:
-            #         print(f"Failed to fetch article: {news}")
-            #         continue
-
-            #     soup_articles_parent = BeautifulSoup(resp_articles.text, "html.parser")
-            #     soup_news = soup_articles_parent.find(
-            #         "div", class_="body-wrap yf-i23rhs"
-            #     )
-
-            #     if soup_news is not None:
-            #         article_text = [i.text for i in soup_news.find_all("p")]
-            #         print(article_text)
-            #     else:
-            #         print(f"No article content found for: {news}")
-
-            # except Exception as e:
-            #     print(f"Error fetching article {news}: {str(e)}")
-
-    def scrape_website(self, website):
+    def scrape_website(self, url):
         print("Connecting to Scraping Browser...")
-        # SBR_WEBDRIVER = r"backend\chromedriver.exe"
 
-        # sbr_connection = ChromiumRemoteConnection(SBR_WEBDRIVER, "goog", "chrome")
-        # with Remote(sbr_connection, options=ChromeOptions()) as driver:
-        #     driver.get(website)
-        #     print("Waiting captcha to solve...")
-        #     solve_res = driver.execute(
-        #         "executeCdpCommand",
-        #         {
-        #             "cmd": "Captcha.waitForSolve",
-        #             "params": {"detectTimeout": 10000},
-        #         },
-        #     )
-        #     print("Captcha solve status:", solve_res["value"]["status"])
-        #     print("Navigated! Scraping page content...")
-        #     html = driver.page_source
-        html = requests.get(website)
-        return html.text
+        dr = webdriver.Chrome()
+        dr.get(self.url)
+        return dr.page_source
 
     def extract_body_content(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
@@ -147,21 +91,26 @@ class NewsScrapper:
         return " ".join(parsed_results)
 
     def run_scrapper(self):
-        dom_content = self.scrape_website(self.url)
-        body_content = self.extract_body_content(dom_content)
-        cleaned_content = self.clean_body_content(body_content)
-        split_dom_content = self.split_dom_content(cleaned_content)
-        parsed_result = self.parse_with_ollama(
-            split_dom_content,
-            "Give me any News/Articles/Posts that are contained in this corpus of text",
-        )
-        print(parsed_result)
+        results = []
+        scraped_html = []
+        links = self.scrape_links()
+        for link in links:
+            dom_content = self.scrape_website(link)
+            scraped_html.append(dom_content)
+
+        for html in scraped_html:
+            body_content = self.extract_body_content(html)
+            cleaned_content = self.clean_body_content(body_content)
+            split_dom_content = self.split_dom_content(cleaned_content)
+            parsed_result = self.parse_with_ollama(
+                split_dom_content,
+                "Give me any News/Articles/Posts that are contained in this corpus of text",
+            )
+            results.append(parsed_result)
+        return results
+        # print(parsed_result)
 
 
 if __name__ == "__main__":
-    n = NewsScrapper(
-        "https://www.moneycontrol.com/news/business/markets/tata-groups-stellar-market-cap-growth-under-ratan-tatas-leadership-from-legacy-to-global-powerhouse-12839268.html",
-        "MSFT",
-        "bruh",
-    )
-    n.run_scrapper()
+    n = NewsScrapper("https://finviz.com/quote.ashx?t=", "MSFT")
+    print(n.run_scrapper())

@@ -26,15 +26,13 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
     {question}
     """
     try:
-        # Load the news data for the specific stock from .txt files
-        # Assuming news data is already stored in the "news/" directory
-        news_files = [f'backend/news/{stock_symbol}.txt']
+        # Load the news data from a single file called "news.txt" in the "data" folder
+        news_file = r'backend\data\news.txt'
         news_context = ""
         
-        # Load and concatenate all the news text data for the stock
-        for file in news_files:
-            with open(file, 'r', encoding='utf-8') as f:
-                news_context += f.read() + " "
+        # Load the news text data
+        with open(news_file, 'r', encoding='utf-8') as f:
+            news_context = f.read()
         
         # Initialize embeddings and database using Chroma and Google Embeddings
         db = Chroma(
@@ -44,8 +42,7 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
             ),
         )
 
-        # Store all the news text into Chroma
-        # Assuming each line in the text file represents a separate news item
+        # Store the entire news context into Chroma
         db.add_texts([news_context])
 
         # Perform similarity search using the embeddings
@@ -78,7 +75,7 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
 
 def main() -> None:
     # Stock symbol to analyze
-    stock_symbol = "AAPL"  # Example stock symbol
+    stock_symbol = "TATA"  # Example stock symbol
 
     # Question related to sentiment analysis or stock news
     question = "What is the overall sentiment for this stock in the latest quarter?"

@@ -2,3 +2,5 @@ langchain
 langchain_chroma
 langchain_google_genai
 dotenv
+bs4
+requests

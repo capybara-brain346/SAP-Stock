@@ -1,4 +1,6 @@
 Date: 
+, Time: , Headline: One of the largest solar projects in the US opens in Texas, backed by Google
+Date: 
 , Time: , Headline: Nvidia to be the first company to hit $4T market cap: Lumida CEO
 Date: 
 , Time: , Headline: Google's internal reorganization puts AI in forefront
@@ -196,5 +198,3 @@ Date:
 , Time: , Headline: Italy in talks with Google over bases for submarine network in Sicily
 Date: 
 , Time: , Headline: Nvidia's 84% Expected Profit Growth Looms Large In S&P 500
-Date: 
-, Time: , Headline: Here's Why 2 Artificial Intelligence (AI) Stocks Slumped Recently. Time to Buy the Dip?

@@ -3,9 +3,9 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from langchain_google_genai import GoogleGenerativeAI
+# from langchain_google_genai import GoogleGenerativeAI
 
-# from langchain_ollama import OllamaLLM
+from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
@@ -20,23 +20,28 @@ class NewsScrapper:
 
     def scrape_links(self):
         dr = webdriver.Chrome()
-        dr.get(self.url)
-        # resp = requests.get(self.url)
-        # print(resp.text)
 
+        dr.get(self.url)  # Open the URL in the browser
+
+        # Parse the page source using BeautifulSoup
         soup = BeautifulSoup(dr.page_source, "html.parser")
-        # print(soup.find_all("a", class_="tab-link-news"))
-        soup_list = [
-            link.get("href") for link in soup.find_all("a", class_="tab-link-news")[0]
-        ]
-        # print(soup_list)
+
+        # Extract all <a> tags with class "tab-link-news"
+        links = soup.find_all("a", class_="tab-link-news")
+
+        # Extract the href attribute from each link
+        soup_list = [link.get("href") for link in links]
+
+        # Close the browser
+        dr.quit()
+
         return soup_list
 
     def scrape_website(self, url):
         print("Connecting to Scraping Browser...")
-
+        print("Scraping for: ", url)
         dr = webdriver.Chrome()
-        dr.get(self.url)
+        dr.get(url)
         return dr.page_source
 
     def extract_body_content(self, html_content):
@@ -74,8 +79,8 @@ class NewsScrapper:
             "2. **Empty Response:** If no information matches the description, return an empty string ('')."
         )
 
-        # model = OllamaLLM(model="llama3.2:3b")
-        model = GoogleGenerativeAI(model="gemini-1.5-flash")
+        model = OllamaLLM(model="llama3.2:3b")
+        # model = GoogleGenerativeAI(model="gemini-1.5-flash")
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | model
 

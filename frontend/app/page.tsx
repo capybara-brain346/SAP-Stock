@@ -6,7 +6,6 @@ import Image from "next/image";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {features} from "@/data/features";
 import {pricing} from "@/data/pricing";
-import {CircleCheck} from "lucide-react";
 
 export default function Home() {
     return (
@@ -150,16 +149,7 @@ export default function Home() {
                                             Get Started
                                         </Button>
                                     </CardContent>
-                                    <CardFooter>
-                                        <ul className="mt-4">
-                                            {plan.features.map((feature) => (
-                                                <li key={feature} className="flex items-center gap-2">
-                                                    <CircleCheck className="w-4 h-4 text-green-500"/>
-                                                    {feature}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </CardFooter>
+                            
                                 </Card>
                             ))}
                         </div>

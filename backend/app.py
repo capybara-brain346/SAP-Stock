@@ -77,6 +77,10 @@ def stock_data(symbol):
 
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
+    ticker = request.form.get("ticker")
+    news = NewsScrapper(
+        "https://finviz.com/quote.ashx?t=", ticker=ticker
+    ).run_scrapper()
     with open(r"backend/data/scraped_results.json", "r") as file:
         news = json.load(file)
 

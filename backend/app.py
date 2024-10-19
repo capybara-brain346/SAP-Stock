@@ -78,21 +78,28 @@ def stock_data(symbol):
 
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
-    # ticker = request.form.get("ticker")
-    # news = NewsScrapper(
-    #     "https://finviz.com/quote.ashx?t=", ticker=ticker
-    # ).run_scrapper()
-    with open(r"backend/data/scraped_results.json", "r") as file:
-        news = json.load(file)
+    try:
+        with open(r"backend/data/scraped_results.json", "r") as file:
+            news = json.load(file)
 
-    all_parsed_results = [item["parsed_result"] for item in news]
+        all_parsed_results = [item["parsed_result"] for item in news]
 
-    if not all_parsed_results:
-        return jsonify({"error": "No data found for sentiment analysis"}), 404
+        if not all_parsed_results:
+            return jsonify({"error": "No data found for sentiment analysis"}), 404
 
-    sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
-    print(sentiment)
-    return jsonify(sentiment)
+        sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
+        print(sentiment)
+
+        # Assuming you also want to fetch additional data like links
+        links = [item["link"] for item in news if "link" in item]  # Update based on your actual structure
+
+        return jsonify({
+            "sentiments": sentiment,
+            "links": links  # Include links in the response if needed
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  # Handle any exceptions that occur
 
 
 @app.route("/api/chatbot", methods=["POST"])

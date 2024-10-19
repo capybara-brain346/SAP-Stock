@@ -206,7 +206,7 @@ export default function Home() {
                 {sentimentAnalysisResults && (
                     <div className="mt-4">
                         <h3>Sentiment Analysis Results:</h3>
-                        <pre>{JSON.stringify(sentimentAnalysisResults, null, 2)}</pre>
+                        <pre>{JSON.stringify(sentimentAnalysisResults, null, 3)}</pre>
                     </div>
                 )}
             </div>

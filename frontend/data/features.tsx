@@ -8,8 +8,8 @@ export const features = [
         icon: <RocketIcon className="w-6 h-6"/>,
     },
     {
-        title: "Customizable",
-        description: "Our service is highly customizable. You can choose the color scheme, and other options that best suit your needs.",
+        title: "In Depth Insights",
+        description: "Our service is meant to best suit your needs.",
         icon: <Pencil2Icon className="w-6 h-6"/>,
     },
     {

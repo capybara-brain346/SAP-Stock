@@ -108,8 +108,7 @@ export default function Home() {
                         </div>
                         <h1 className="md:text-7xl my-4 font-extrabold text-4xl md:leading-tight">SAP Stock!</h1>
                         <p className="mx-auto my-4 text-sm w-full max-w-xl text-center font-medium leading-relaxed tracking-wide">
-                            This is a landing page template that you can use to create a beautiful website. It is
-                            designed to be easy to use and customize.
+                            Welcome to SAP Stock 
                         </p>
 
                         <div className="flex flex-row justify-center items-center space-x-4 my-8">
@@ -139,9 +138,9 @@ export default function Home() {
                 <div className="container mx-auto text-center">
                     <div className="my-24">
                         <h5 className="text-primary">WHY CHOOSE US</h5>
-                        <h2 className="text-4xl font-extrabold my-4">Build better websites with us</h2>
+                        <h2 className="text-4xl font-extrabold my-4">Grow your portfolio with us</h2>
                         <p className="mx-auto my-4 text-sm w-full max-w-md bg-transparent text-center font-medium leading-relaxed tracking-wide text-muted-foreground">
-                            Show off your features or services in a beautiful way. This section is perfect for showcasing
+                            Our services are here to cater to your needs
                         </p>
 
                         <div className="flex flex-col md:flex-row gap-4 mt-12">
@@ -206,7 +205,7 @@ export default function Home() {
                 {sentimentAnalysisResults && (
                     <div className="mt-4">
                         <h3>Sentiment Analysis Results:</h3>
-                        <pre>{JSON.stringify(sentimentAnalysisResults, null, 3)}</pre>
+                        <pre>{JSON.stringify(sentimentAnalysisResults, null, 2)}</pre>
                     </div>
                 )}
             </div>

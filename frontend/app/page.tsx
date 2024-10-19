@@ -34,6 +34,11 @@ export default function Home() {
     const [historicalPrices, setHistoricalPrices] = useState([]); // State for historical data
     const [sentimentAnalysisResults, setSentimentAnalysisResults] = useState<any>(null); // State for sentiment data
 
+    // Chatbot states
+    const [userMessage, setUserMessage] = useState("");
+    const [chatbotResponse, setChatbotResponse] = useState<any>(null);
+    const [loadingChatbot, setLoadingChatbot] = useState(false);
+
     const fetchStockData = async () => {
         setLoading(true);
         setErrorMessage(""); // Reset error message
@@ -65,6 +70,22 @@ export default function Home() {
             setSentimentAnalysisResults(null);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch chatbot response
+    const fetchChatbotResponse = async () => {
+        setLoadingChatbot(true);
+        try {
+            const response = await axios.post(`http://127.0.0.1:5000/api/chatbot`, {
+                message: userMessage, // Send user message to the chatbot API
+            });
+            setChatbotResponse(response.data.response); // Assuming the response is structured accordingly
+        } catch (error) {
+            console.error("Error fetching chatbot response:", error);
+            setChatbotResponse("Error fetching chatbot response. Please try again.");
+        } finally {
+            setLoadingChatbot(false);
         }
     };
 
@@ -166,7 +187,7 @@ export default function Home() {
                 )}
                 {errorMessage && <p className="mt-4 text-red-500">{errorMessage}</p>}
 
-                {/* Line Chart for Stock Prices */}
+                {/* Display Historical Price Line Chart */}
                 {historicalPrices.length > 0 && (
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={historicalPrices}>
@@ -174,21 +195,37 @@ export default function Home() {
                             <XAxis dataKey="name" />
                             <YAxis />
                             <Tooltip />
-                            <Line type="monotone" dataKey="price" stroke="#8884d8" activeDot={{ r: 8 }} />
+                            <Line type="monotone" dataKey="price" stroke="#8884d8" />
                         </LineChart>
                     </ResponsiveContainer>
                 )}
 
-                {/* Display Sentiment Analysis */}
+                {/* Display Sentiment Analysis Results */}
                 {sentimentAnalysisResults && (
-                    <div className="mt-8">
-                        <h3 className="text-xl font-bold">Sentiment Analysis</h3>
-                        {sentimentAnalysisResults.map((result: any, index: number) => (
-                            <div key={index} className="flex justify-between">
-                                <span>{result.label}</span>
-                                <span>{result.score.toFixed(2)}</span> {/* Format to 2 decimal places */}
-                            </div>
-                        ))}
+                    <div className="mt-4">
+                        <h3>Sentiment Analysis Results:</h3>
+                        <pre>{JSON.stringify(sentimentAnalysisResults, null, 2)}</pre>
+                    </div>
+                )}
+            </div>
+
+            {/* Chatbot Section */}
+            <div className="flex flex-col items-center my-8">
+                <h3 className="text-2xl mb-4">Chatbot</h3>
+                <textarea
+                    value={userMessage}
+                    onChange={(e) => setUserMessage(e.target.value)}
+                    placeholder="Ask me anything..."
+                    className="border rounded p-2 mb-2"
+                    rows={4}
+                />
+                <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
+                    {loadingChatbot ? "Thinking..." : "Send"}
+                </Button>
+                {chatbotResponse && (
+                    <div className="mt-4">
+                        <h4 className="font-bold">Chatbot Response:</h4>
+                        <p>{chatbotResponse}</p>
                     </div>
                 )}
             </div>

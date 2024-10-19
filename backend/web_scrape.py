@@ -68,10 +68,20 @@ class NewsScrapper:
 
     def parse_with_ollama(self, dom_chunks, parse_description):
         template = (
-            "You are tasked with extracting specific information from the following text content: {dom_content}. "
-            "Please follow these instructions carefully: \n\n"
-            "1. **Extract Information:** Only extract the information that you think directly matches the provided description: {parse_description}. "
-            "2. **Empty Response:** If no information matches the description, return an empty string ('')."
+            "You are tasked with accurately extracting the main news or article content from the following HTML: {dom_content}. "
+            "Follow these steps carefully to ensure only relevant and meaningful information is extracted:\n\n"
+            "1. **Identify the Main Article:** Focus on extracting the primary content of the news article or story. Prioritize text within tags such as <article>, <main>, <h1>, <h2>, <p>, and <div> (when relevant). Ignore text in sections like navigation bars, footers, sidebars, ads, or comments."
+            "\n\n"
+            "2. **Extract Key Components:** Extract the following components in this order:\n"
+            "   - **Headline**: Look for text within <h1> or <title> tags that represents the article's main title.\n"
+            "   - **Subheadings (if available)**: Extract <h2> or <h3> tags relevant to the article structure.\n"
+            "   - **Main Body**: Extract paragraph content (<p> tags) that forms the body of the article. Ensure it is coherent and complete.\n"
+            "   - **Date and Author (if present)**: Extract the date of publication and author name if available.\n\n"
+            "3. **Exclude Irrelevant Content:** Exclude unrelated information such as ads, promotional banners, navigation links, comments, or any other non-article content."
+            "\n\n"
+            "4. **Ensure Coherence:** The extracted content should be properly structured, easy to read, and coherent. Remove any broken or incomplete sentences."
+            "\n\n"
+            "5. **Return an Empty Response if Necessary:** If no meaningful article content is found, return an empty string ('')."
         )
 
         model = OllamaLLM(model="llama3.2:3b")

@@ -2,7 +2,6 @@ import os
 import logging
 from typing import List, Tuple
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import JSONLoader
 from langchain.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -11,13 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
+def query_rag(question: str) -> str:
     PROMPT_TEMPLATE = """
     You are an assistant providing sentiment analysis and stock market news summaries.
 
-    Stock Symbol:
-    {stock_symbol}
-    
     Related News:
     {context}
 
@@ -43,14 +39,12 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
 
         db.add_texts([news_context])
 
-        results = db.similarity_search_with_score(stock_symbol, k=len(db.get()["ids"]))
+        results = db.similarity_search_with_score(question, k=len(db.get()["ids"]))
 
         context_text = " ".join([doc.page_content for doc, _score in results])
 
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-        prompt = prompt_template.format(
-            stock_symbol=stock_symbol, context=context_text, question=question
-        )
+        prompt = prompt_template.format(context=context_text, question=question)
 
         model = ChatGoogleGenerativeAI(
             model="gemini-1.5-flash", api_key=os.getenv("GOOGLE_API_KEY")
@@ -66,11 +60,9 @@ def query_rag(stock_symbol: str, question: str) -> Tuple[str, List[str]] | str:
 
 
 def main() -> None:
-    stock_symbol = "TATA"  # Example stock symbol
+    question = "What is the overall sentiment for the stock/company in the latest quarter?"
 
-    question = "What is the overall sentiment for this stock in the latest quarter?"
-
-    print(query_rag(stock_symbol=stock_symbol, question=question))
+    print(query_rag(question=question))
 
 
 if __name__ == "__main__":

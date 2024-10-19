@@ -19,7 +19,7 @@ export default function RootLayout({children}: Readonly<{ children: React.ReactN
         <ThemeProvider>
             <Navbar/>
             {children}
-            <Footer/>
+            
         </ThemeProvider>
         </body>
         </html>

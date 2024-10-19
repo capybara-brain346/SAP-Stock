@@ -170,6 +170,8 @@ export default function Home() {
 
             {/* Stock Price Input and Line Chart Section */}
             <div className="flex flex-col items-center my-8">
+            <h1 className="text-5xl mb-4 font-extrabold text-primary">Enter Stock Ticker </h1>
+   
                 <input
                     type="text"
                     placeholder="Enter stock symbol (e.g., AAPL)"

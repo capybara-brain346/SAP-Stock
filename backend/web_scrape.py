@@ -19,27 +19,25 @@ class NewsScrapper:
         self.ticker = ticker
         self.url = self.site + self.ticker
 
+        self.driver = webdriver.Chrome()
+
     def scrape_links(self):
-        dr = webdriver.Chrome()
+        self.driver.get(self.url)
 
-        dr.get(self.url)
-
-        soup = BeautifulSoup(dr.page_source, "html.parser")
+        soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
         links = soup.find_all("a", class_="tab-link-news")
 
         soup_list = [link.get("href") for link in links]
         print(soup_list)
-        dr.quit()
 
         return soup_list[0:2]
 
     def scrape_website(self, url):
         print("Connecting to Scraping Browser...")
         print("Scraping for: ", url)
-        dr = webdriver.Chrome()
-        dr.get(url)
-        return dr.page_source
+        self.driver.get(url)
+        return self.driver.page_source
 
     def extract_body_content(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
@@ -112,8 +110,10 @@ class NewsScrapper:
             )
             results.append({"link": links[i], "parsed_result": parsed_result})
 
-        with open("data/scraped_results.json", "w") as json_file:
+        with open(r"backend\data\scraped_results.json", "w") as json_file:
             json.dump(results, json_file, indent=4)
+
+        self.driver.close()
 
         return results
 

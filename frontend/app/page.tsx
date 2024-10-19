@@ -205,11 +205,35 @@ export default function Home() {
 
                 {/* Display Sentiment Analysis Results */}
                 {sentimentAnalysisResults && (
-                    <div className="mt-4">
-                        <h3>Sentiment Analysis Results:</h3>
-                        <pre>{JSON.stringify(sentimentAnalysisResults, null, 2)}</pre>
-                    </div>
-                )}
+    <div className="mt-4">
+        <h3>Sentiment Analysis Results:</h3>
+        <table className="min-w-full border border-gray-300">
+            <thead>
+                <tr>
+                    <th className="border border-gray-300 px-4 py-2">Link</th>
+                    <th className="border border-gray-300 px-4 py-2">Sentiment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {sentimentAnalysisResults.links && sentimentAnalysisResults.links.length > 0 && 
+                    sentimentAnalysisResults.links.map((link, index) => (
+                        <tr key={index}>
+                            <td className="border border-gray-300 px-4 py-2">
+                                <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                                    {link}
+                                </a>
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2">
+                                {sentimentAnalysisResults.sentiments[index]?.label}
+                            </td>
+                        </tr>
+                    ))
+                }
+            </tbody>
+        </table>
+    </div>
+)}
+
             </div>
 
             {/* Chatbot Section */}

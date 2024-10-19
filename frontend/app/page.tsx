@@ -213,25 +213,31 @@ export default function Home() {
 
             {/* Chatbot Section */}
 
-            <div className="flex flex-col items-center my-8">
-    <h3 className="text-2xl mb-4">Chatbot</h3>
+            <div className="flex flex-col items-center my-8 bg-gradient-to-b from-background to-muted-foreground rounded-lg p-6 shadow-lg">
+    <h3 className="text-3xl mb-4 font-extrabold text-primary">Ask Our AI Chatbot</h3>
+    <p className="text-sm mb-4 max-w-md text-center text-muted-foreground">
+        Have any questions about stock prices or the market? Our AI chatbot is here to help. Just type your question below.
+    </p>
     <textarea
         value={userMessage}
         onChange={(e) => setUserMessage(e.target.value)}
         placeholder="Ask me anything..."
-        className="border rounded p-2 mb-2"
+        className="w-full md:w-3/4 p-4 rounded-md border border-border bg-muted/90 text-white placeholder-white focus:ring-2 focus:ring-primary focus:outline-none mb-4"
         rows={4}
     />
     <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
         {loadingChatbot ? "Thinking..." : "Send"}
     </Button>
     {chatbotResponse && (
-        <div className="mt-4">
-            <h4 className="font-bold">Chatbot Response:</h4>
-            <p>{chatbotResponse}</p>
+        <div className="mt-4 w-full md:w-3/4 p-4 rounded-lg bg-card text-primary-foreground shadow-md">
+            <h4 className="font-bold text-lg">Chatbot Response:</h4>
+            <p className="mt-2 text-muted-foreground">{chatbotResponse}</p>
         </div>
     )}
 </div>
+
+
+
         </>
     );
 }

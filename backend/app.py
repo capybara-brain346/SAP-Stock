@@ -5,26 +5,25 @@ from sentiment_analysis import SentimentAnalysis
 from web_scrape import NewsScrapper
 import json
 from bot import query_rag
+import logging
 
 app = Flask(__name__)
 CORS(app)
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/query', methods=['POST'])
+
+@app.route("/query", methods=["POST"])
 def query():
     data = request.json
-    question = data.get('question')
+    question = data.get("question")
 
-    
     try:
         # Call your query_rag function and get the result
-        result = query_rag( question)
-        
+        result = query_rag(question)
+
         # Return the result as JSON
         return jsonify({"response": result})  # Wrap result in a response object
     except Exception as e:
@@ -44,17 +43,22 @@ def stock():
 
         if "regularMarketOpen" in quote:
             current_price = quote["regularMarketOpen"]
-            return jsonify({
-                "symbol": symbol,
-                "currentPrice": current_price,
-                "longName": quote.get("longName", "N/A"),
-                "error": None,
-            }), 200
+            return jsonify(
+                {
+                    "symbol": symbol,
+                    "currentPrice": current_price,
+                    "longName": quote.get("longName", "N/A"),
+                    "error": None,
+                }
+            ), 200
         else:
-            return jsonify({"error": "Stock not found or no current price available"}), 404
+            return jsonify(
+                {"error": "Stock not found or no current price available"}
+            ), 404
     except Exception as e:
         print("Error fetching data:", e)  # Debugging output for errors
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
@@ -70,6 +74,7 @@ def stock_data(symbol):
 
     return jsonify({"labels": labels, "values": values})
 
+
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
     with open(r"backend/data/scraped_results.json", "r") as file:
@@ -84,10 +89,11 @@ def sentiment():
     print(sentiment)
     return jsonify(sentiment)
 
-@app.route('/api/chatbot', methods=['POST'])
+
+@app.route("/api/chatbot", methods=["POST"])
 def chatbot():
     data = request.json
-    question = data.get('question')
+    question = data.get("question")
 
     # Validate input
     if not question:
@@ -95,7 +101,9 @@ def chatbot():
 
     # Call the query_rag function
     response = query_rag(question)
-    
+
     return jsonify({"response": response})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

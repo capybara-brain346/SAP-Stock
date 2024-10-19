@@ -18,16 +18,12 @@ CORS(app)
 @app.route('/query', methods=['POST'])
 def query():
     data = request.json
-    stock_symbol = data.get('TATA')
     question = data.get('question')
 
-    # Validate input
-    if not stock_symbol or not question:
-        return jsonify({"error": "Please provide both stock_symbol and question."}), 400
-
+    
     try:
         # Call your query_rag function and get the result
-        result = query_rag(stock_symbol, question)
+        result = query_rag( question)
         
         # Return the result as JSON
         return jsonify({"response": result})  # Wrap result in a response object
@@ -90,13 +86,16 @@ def sentiment():
 
 @app.route('/api/chatbot', methods=['POST'])
 def chatbot():
-    user_message = request.json.get('message')  # Get user message from request
-    if not user_message:
-        return jsonify({"error": "Message not provided."}), 400
-    
-    # Process the user message and generate a response
-    response_message = "You said: " + user_message  # Placeholder response
-    return jsonify({"response": response_message})
+    data = request.json
+    question = data.get('question')
 
+    # Validate input
+    if not question:
+        return jsonify({"error": "Please provide a question."}), 400
+
+    # Call the query_rag function
+    response = query_rag(question)
+    
+    return jsonify({"response": response})
 if __name__ == "__main__":
     app.run(debug=True)

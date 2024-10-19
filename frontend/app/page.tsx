@@ -77,8 +77,9 @@ export default function Home() {
     const fetchChatbotResponse = async () => {
         setLoadingChatbot(true);
         try {
+            // Send only the user's message as the question to the chatbot API
             const response = await axios.post(`http://127.0.0.1:5000/api/chatbot`, {
-                message: userMessage, // Send user message to the chatbot API
+                question: userMessage, // Change to 'question' to match expected input structure
             });
             setChatbotResponse(response.data.response); // Assuming the response is structured accordingly
         } catch (error) {
@@ -88,6 +89,7 @@ export default function Home() {
             setLoadingChatbot(false);
         }
     };
+    
 
     return (
         <>
@@ -210,25 +212,26 @@ export default function Home() {
             </div>
 
             {/* Chatbot Section */}
+
             <div className="flex flex-col items-center my-8">
-                <h3 className="text-2xl mb-4">Chatbot</h3>
-                <textarea
-                    value={userMessage}
-                    onChange={(e) => setUserMessage(e.target.value)}
-                    placeholder="Ask me anything..."
-                    className="border rounded p-2 mb-2"
-                    rows={4}
-                />
-                <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
-                    {loadingChatbot ? "Thinking..." : "Send"}
-                </Button>
-                {chatbotResponse && (
-                    <div className="mt-4">
-                        <h4 className="font-bold">Chatbot Response:</h4>
-                        <p>{chatbotResponse}</p>
-                    </div>
-                )}
-            </div>
+    <h3 className="text-2xl mb-4">Chatbot</h3>
+    <textarea
+        value={userMessage}
+        onChange={(e) => setUserMessage(e.target.value)}
+        placeholder="Ask me anything..."
+        className="border rounded p-2 mb-2"
+        rows={4}
+    />
+    <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
+        {loadingChatbot ? "Thinking..." : "Send"}
+    </Button>
+    {chatbotResponse && (
+        <div className="mt-4">
+            <h4 className="font-bold">Chatbot Response:</h4>
+            <p>{chatbotResponse}</p>
+        </div>
+    )}
+</div>
         </>
     );
 }

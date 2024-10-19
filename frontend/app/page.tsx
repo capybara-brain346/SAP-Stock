@@ -28,31 +28,41 @@ import {
 
 export default function Home() {
     const [stockSymbol, setStockSymbol] = useState("");
-    const [stockPrice, setStockPrice] = useState<number | null>(null);
+    const [currentPrice, setCurrentPrice] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [historicalData, setHistoricalData] = useState([]); // State for historical data
+    const [errorMessage, setErrorMessage] = useState("");
+    const [historicalPrices, setHistoricalPrices] = useState([]); // State for historical data
+    const [sentimentAnalysisResults, setSentimentAnalysisResults] = useState<any>(null); // State for sentiment data
 
-    const fetchStockPrice = async () => {
+    const fetchStockData = async () => {
         setLoading(true);
-        setError(""); // Reset error message
+        setErrorMessage(""); // Reset error message
         try {
             // Fetch latest stock price
-            const response = await axios.get(`http://127.0.0.1:5000/api/stock?symbol=${stockSymbol}`);
-            const price = response.data.currentPrice; // Get the latest closing price
-            setStockPrice(price);
+            const stockResponse = await axios.get(`http://127.0.0.1:5000/api/stock?symbol=${stockSymbol}`);
+            const price = stockResponse.data.currentPrice; // Get the latest closing price
+            setCurrentPrice(price);
 
-            // Fetch historical data (for example, last 7 days)
+            // Fetch historical data (for example, last 30 days)
             const historicalResponse = await axios.get(`http://127.0.0.1:5000/stock_data/${stockSymbol}`); // Update your API endpoint as needed
-            const historicalPrices = historicalResponse.data.values.map((value, index) => ({
+            const historicalPricesData = historicalResponse.data.values.map((value, index) => ({
                 name: `Day ${index + 1}`, // Replace with actual date if available
                 price: value,
             }));
-            setHistoricalData(historicalPrices);
+            setHistoricalPrices(historicalPricesData);
+
+            // Fetch sentiment data
+            const sentimentResponse = await axios.post(`http://127.0.0.1:5000/api/sentiments`, {
+                symbol: stockSymbol, // Include the symbol if needed
+            });
+            setSentimentAnalysisResults(sentimentResponse.data);
+            console.log("Sentiment Scores:", sentimentResponse.data); // Print sentiment scores
+
         } catch (error) {
             console.error("Error fetching stock price:", error);
-            setError("Error fetching stock price. Please check the symbol.");
-            setStockPrice(null);
+            setErrorMessage("Error fetching stock price. Please check the symbol.");
+            setCurrentPrice(null);
+            setSentimentAnalysisResults(null);
         } finally {
             setLoading(false);
         }
@@ -145,21 +155,21 @@ export default function Home() {
                     onChange={(e) => setStockSymbol(e.target.value)}
                     className="border rounded p-2"
                 />
-                <Button onClick={fetchStockPrice} className="mt-2" disabled={loading}>
+                <Button onClick={fetchStockData} className="mt-2" disabled={loading}>
                     {loading ? "Fetching..." : "Get Insights"}
                 </Button>
                 {/* Display Stock Price */}
-                {stockPrice !== null && (
+                {currentPrice !== null && (
                     <p className="mt-4 text-lg">
-                        Latest Closing Price: ${stockPrice.toFixed(2)}
+                        Latest Closing Price: ${currentPrice.toFixed(2)}
                     </p>
                 )}
-                {error && <p className="mt-4 text-red-500">{error}</p>}
+                {errorMessage && <p className="mt-4 text-red-500">{errorMessage}</p>}
 
-                {/* Line Chart */}
-                {historicalData.length > 0 && (
+                {/* Line Chart for Stock Prices */}
+                {historicalPrices.length > 0 && (
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={historicalData}>
+                        <LineChart data={historicalPrices}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
                             <YAxis />
@@ -168,12 +178,20 @@ export default function Home() {
                         </LineChart>
                     </ResponsiveContainer>
                 )}
-            </div>
 
-            {/* Footer */}
-            <footer className="border-t border-border p-4 text-center">
-                <p>&copy; 2024 Your Company Name. All rights reserved.</p>
-            </footer>
+                {/* Display Sentiment Analysis */}
+                {sentimentAnalysisResults && (
+                    <div className="mt-8">
+                        <h3 className="text-xl font-bold">Sentiment Analysis</h3>
+                        {sentimentAnalysisResults.map((result: any, index: number) => (
+                            <div key={index} className="flex justify-between">
+                                <span>{result.label}</span>
+                                <span>{result.score.toFixed(2)}</span> {/* Format to 2 decimal places */}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </>
     );
 }

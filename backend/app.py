@@ -65,7 +65,7 @@ def sentiment():
         return jsonify({"error": "No data found for sentiment analysis"}), 404
 
     sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
-
+    print(sentiment)
     return jsonify(sentiment)
 
 

@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify, render_template
 import yfinance as yf
 from flask_cors import CORS
 from sentiment_analysis import SentimentAnalysis
-from web_scrape import NewsScrapper
+
+# from web_scrape import NewsScrapper
 import json
 from bot import query_rag
 import logging
@@ -77,10 +78,10 @@ def stock_data(symbol):
 
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
-    ticker = request.form.get("ticker")
-    news = NewsScrapper(
-        "https://finviz.com/quote.ashx?t=", ticker=ticker
-    ).run_scrapper()
+    # ticker = request.form.get("ticker")
+    # news = NewsScrapper(
+    #     "https://finviz.com/quote.ashx?t=", ticker=ticker
+    # ).run_scrapper()
     with open(r"backend/data/scraped_results.json", "r") as file:
         news = json.load(file)
 

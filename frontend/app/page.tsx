@@ -72,6 +72,15 @@ export default function Home() {
             setLoading(false);
         }
     };
+        // Function to format the response text
+const formatResponse = (text) => {
+    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<em><strong>$1</strong></em>");
+    text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+    text = text.replace(/\n/g, "<br />");
+    return text;
+};
+
 
     // Fetch chatbot response
     const fetchChatbotResponse = async () => {
@@ -253,12 +262,15 @@ export default function Home() {
     <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
         {loadingChatbot ? "Thinking..." : "Send"}
     </Button>
-    {chatbotResponse && (
-        <div className="mt-4 w-full md:w-3/4 p-4 rounded-lg bg-card text-primary-foreground shadow-md">
-            <h4 className="font-bold text-lg">Chatbot Response:</h4>
-            <p className="mt-2 text-muted-foreground">{chatbotResponse}</p>
-        </div>
-    )}
+
+
+{chatbotResponse && (
+    <div className="mt-4 w-full md:w-3/4 p-4 rounded-lg bg-card text-primary-foreground shadow-md">
+        <h4 className="font-bold text-lg">Chatbot Response:</h4>
+        <p className="mt-2 text-muted-foreground" dangerouslySetInnerHTML={{ __html: formatResponse(chatbotResponse) }} />
+    </div>
+)}
+
 </div>
 
 

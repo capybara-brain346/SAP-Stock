@@ -83,22 +83,3 @@ Contributions are welcome! Follow these steps:
 3. Make changes and commit (git commit -m 'Add new feature').
 4. Push to the branch (git push origin feature-branch).
 5. Create a pull request.
-
-License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-Support
-
-- Contact: [your email/username]
-- Documentation: [link to docs]
-
-Additional suggestions:
-
-- Consider adding screenshots or demos to showcase the application's UI and features.
-- Provide more detailed documentation for developers, such as API endpoints and data models.
-- Include a section for known issues or troubleshooting tips.
-- Link to external resources or APIs used in the project.
-- Display your social media or professional profiles for networking.
-
-Feel free to modify and refine this version to best represent your project!

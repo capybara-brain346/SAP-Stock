@@ -48,7 +48,6 @@ class SentimentAnalysis:
 
         return chunks
 
-# Function to analyze ticker files
 def analyze_ticker_files(tickers, news_directory):
     for ticker in tickers:
         file_path = f"{news_directory}/{ticker}_news.txt"
@@ -62,29 +61,25 @@ def analyze_ticker_files(tickers, news_directory):
             sentiment_analyzer = SentimentAnalysis(news_text)
             results = sentiment_analyzer.sentiment_analysis()
 
-            # Print the results, filtering out entries without headlines
             for result in results:
-                if result['headline'].strip():  # Check if the headline is not empty
+                if result['headline'].strip():
                     label = result['label']
                     score = result['score']
                     
-                    # Adjust thresholds for more interesting outputs
                     if label == 'neutral':
-                        if score < 0.3:  # Lower threshold for negative sentiment
+                        if score < 0.3:  
                             label = 'slightly negative'
-                        elif score > 0.7:  # Higher threshold for positive sentiment
+                        elif score > 0.7: 
                             label = 'slightly positive'
                         else:
                             label = 'neutral'
                     
-                    # Add custom logic to make labels more interesting
                     if 'strongly' in result['headline']:
                         label = 'strongly positive' if 'rise' in result['headline'] else 'strongly negative'
                     
                     print(f"Headline: {result['headline']}, Sentiment: {label}, Score: {score:.2f}")
 
-# Example usage
 if __name__ == "__main__":
-    news_directory = "news"  # Ensure this matches your actual directory
-    tickers = ['AMZN', 'GOOG', 'DRUG', 'AAPL']  # Replace with your actual tickers
+    news_directory = "news" 
+    tickers = ['AMZN', 'GOOG', 'DRUG', 'AAPL'] 
     analyze_ticker_files(tickers, news_directory)

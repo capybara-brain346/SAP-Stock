@@ -3,8 +3,6 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-
-# from langchain_google_genai import GoogleGenerativeAI
 import json
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
@@ -52,7 +50,6 @@ class NewsScrapper:
         for script_or_style in soup(["script", "style"]):
             script_or_style.extract()
 
-        # Get text or further process the content
         cleaned_content = soup.get_text(separator="\n")
         cleaned_content = "\n".join(
             line.strip() for line in cleaned_content.splitlines() if line.strip()

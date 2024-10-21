@@ -1,16 +1,11 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import yfinance as yf
 from flask_cors import CORS
 from sentiment_analysis import SentimentAnalysis
-
-# from web_scrape import NewsScrapper
+from web_scrape import NewsScrapper
 import json
 from bot import query_rag
 import logging
-
-app = Flask(__name__)
-CORS(app)
-
 
 app = Flask(__name__)
 CORS(app)
@@ -22,13 +17,10 @@ def query():
     question = data.get("question")
 
     try:
-        # Call your query_rag function and get the result
         result = query_rag(question)
 
-        # Return the result as JSON
-        return jsonify({"response": result})  # Wrap result in a response object
+        return jsonify({"response": result})
     except Exception as e:
-        # Log the error (you can configure logging as needed)
         logging.error(f"Error processing query: {e}")
         return jsonify({"error": "An error occurred while processing your query."}), 500
 
@@ -40,7 +32,7 @@ def stock():
 
     try:
         quote = ticker.info
-        print(quote)  # Debugging output to check fetched data
+        print(quote)
 
         if "regularMarketOpen" in quote:
             current_price = quote["regularMarketOpen"]
@@ -57,14 +49,14 @@ def stock():
                 {"error": "Stock not found or no current price available"}
             ), 404
     except Exception as e:
-        print("Error fetching data:", e)  # Debugging output for errors
+        print("Error fetching data:", e)
         return jsonify({"error": str(e)}), 500
 
 
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
     stock = yf.Ticker(symbol)
-    data = stock.history(period="1mo")  # Get the last 1 month of stock data
+    data = stock.history(period="1mo")
 
     if data.empty:
         return jsonify({"error": "No data found for the symbol provided."})
@@ -72,6 +64,8 @@ def stock_data(symbol):
     prices = data["Close"].to_dict()
     labels = list(prices.keys())
     values = list(prices.values())
+
+    NewsScrapper(site="https://finviz.com/quote.ashx?t=", ticker=symbol).run_scrapper()
 
     return jsonify({"labels": labels, "values": values})
 
@@ -90,16 +84,17 @@ def sentiment():
         sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
         print(sentiment)
 
-        # Assuming you also want to fetch additional data like links
-        links = [item["link"] for item in news if "link" in item]  # Update based on your actual structure
+        links = [item["link"] for item in news if "link" in item]
 
-        return jsonify({
-            "sentiments": sentiment,
-            "links": links  # Include links in the response if needed
-        })
+        return jsonify(
+            {
+                "sentiments": sentiment,
+                "links": links,
+            }
+        )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500  # Handle any exceptions that occur
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/chatbot", methods=["POST"])
@@ -107,11 +102,9 @@ def chatbot():
     data = request.json
     question = data.get("question")
 
-    # Validate input
     if not question:
         return jsonify({"error": "Please provide a question."}), 400
 
-    # Call the query_rag function
     response = query_rag(question)
 
     return jsonify({"response": response})

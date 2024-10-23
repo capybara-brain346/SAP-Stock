@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-
-# from langchain_google_genai import GoogleGenerativeAI
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import json
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
@@ -18,7 +19,9 @@ class NewsScrapper:
         self.site = site
         self.ticker = ticker
         self.url = self.site + self.ticker
-
+        chrome_options = Options()
+        chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--allow-insecure-localhost")
         self.driver = webdriver.Chrome()
 
     def scrape_links(self):
@@ -29,7 +32,7 @@ class NewsScrapper:
         links = soup.find_all("a", class_="tab-link-news")
 
         soup_list = [link.get("href") for link in links]
-        print(soup_list)
+        # print(soup_list)
 
         return soup_list[0:2]
 
@@ -37,24 +40,37 @@ class NewsScrapper:
         print("Connecting to Scraping Browser...")
         print("Scraping for: ", url)
         self.driver.get(url)
-        return self.driver.page_source
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, "div"))
+            )
+        except Exception as e:
+            print(f"Error waiting for content: {e}")
+        finally:
+            html = self.driver.page_source
 
-    def extract_body_content(self, html_content):
-        soup = BeautifulSoup(html_content, "html.parser")
-        body_content = soup.body
-        if body_content:
-            return str(body_content)
-        return ""
+            soup = BeautifulSoup(html, "html.parser")
+            body_content = soup.body
+            if body_content:
+                return " ".join([p.get_text() for p in body_content.find_all("p")])
+            return ""
+
+    # def extract_body_content(self, html_content):
+    #     soup = BeautifulSoup(html_content, "html.parser")
+    #     body_content = soup.body
+    #     if body_content:
+    #         return " ".join([p.get_text() for p in body_content.find_all("p")])
+    #     return ""
 
     def clean_body_content(self, body_content):
+        print(body_content)
         soup = BeautifulSoup(body_content, "html.parser")
 
         for script_or_style in soup(["script", "style"]):
             script_or_style.extract()
 
-        # Get text or further process the content
         cleaned_content = soup.get_text(separator="\n")
-        cleaned_content = "\n".join(
+        cleaned_content = " ".join(
             line.strip() for line in cleaned_content.splitlines() if line.strip()
         )
 
@@ -68,10 +84,11 @@ class NewsScrapper:
 
     def parse_with_ollama(self, dom_chunks, parse_description):
         template = (
-            "You are tasked with extracting specific information from the following text content: {dom_content}. "
-            "Please follow these instructions carefully: \n\n"
-            "1. **Extract Information:** Only extract the information that you think directly matches the provided description: {parse_description}. "
-            "2. **Empty Response:** If no information matches the description, return an empty string ('')."
+            "You are assigned to extract specific information from the provided text content: {dom_content}. "
+            "Please adhere to the following instructions: \n\n"
+            "1. **Extract Relevant Information:** Identify and extract only the information that directly corresponds to the description given: {parse_description}. "
+            "2. **Return an Empty Response if No Matches:** If no information aligns with the provided description, respond with an empty string ('').\n\n"
+            "Please ensure that your extraction is accurate and concise, focusing solely on the relevant details."
         )
 
         model = OllamaLLM(model="llama3.2:3b")
@@ -101,8 +118,8 @@ class NewsScrapper:
             scraped_html.append(dom_content)
 
         for i, html in enumerate(scraped_html):
-            body_content = self.extract_body_content(html)
-            cleaned_content = self.clean_body_content(body_content)
+            # body_content = self.extract_body_content(html)
+            cleaned_content = self.clean_body_content(html)
             split_dom_content = self.split_dom_content(cleaned_content)
             parsed_result = self.parse_with_ollama(
                 split_dom_content,

@@ -37,6 +37,8 @@ def query_rag(question: str) -> str:
             ),
         )
 
+        
+
         db.add_texts([news_context])
 
         results = db.similarity_search_with_score(question, k=len(db.get()["ids"]))

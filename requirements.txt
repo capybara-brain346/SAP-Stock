@@ -1,6 +1,6 @@
 langchain
 langchain_chroma
 langchain_google_genai
-dotenv
+python-dotenv
 bs4
 requests

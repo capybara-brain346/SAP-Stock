@@ -1,20 +1,14 @@
 import os
-import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 import json
-# Import Ollama and potentially Google Gemini models
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAI
+# from langchain_google_genai import GoogleGenerativeAI
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Optional: Gemini API setup if it's available
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
@@ -73,7 +67,6 @@ class NewsScrapper:
         ]
 
     def parse_with_model(self, dom_chunks, parse_description):
-        # Define the prompt template for both models
         template = (
             "You are tasked with extracting specific information from the following text content: {dom_content}. "
             "Please follow these instructions carefully: \n\n"
@@ -82,17 +75,14 @@ class NewsScrapper:
         )
 
         print("Using Gemini API for parsing...")
-        # Assuming you have the setup for Google Generative AI (Gemini)
-        
-        model = GoogleGenerativeAI(model="gemini-1.5-flash", api_key=GEMINI_API_KEY)
 
-        # Create a prompt chain
+        # model = GoogleGenerativeAI(model="gemini-1.5-flash", api_key=GEMINI_API_KEY)
+        model = OllamaLLM(model="llama3.2:3b")
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | model
 
         parsed_results = []
 
-        # Process each DOM chunk through the selected model
         for i, chunk in enumerate(dom_chunks, start=1):
             response = chain.invoke(
                 {"dom_content": chunk, "parse_description": parse_description}

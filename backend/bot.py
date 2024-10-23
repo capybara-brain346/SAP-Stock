@@ -1,6 +1,5 @@
 import os
 import logging
-from typing import List, Tuple
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI

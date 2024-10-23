@@ -6,6 +6,7 @@ from web_scrape import NewsScrapper
 import json
 from bot import query_rag
 import logging
+import json
 
 app = Flask(__name__)
 CORS(app)

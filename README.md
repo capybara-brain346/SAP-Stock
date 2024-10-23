@@ -1,11 +1,12 @@
 # Stock News Sentiment Analysis Platform
-
+![sap_stocks](https://github.com/user-attachments/assets/dc342b2e-c589-4f2a-bf9a-b87e8245daa5)
 This platform provides real-time sentiment analysis on stock-related news. It fetches news from over 60 different sources and performs sentiment classification. Additionally, it integrates an AI chatbot that allows users to query the fetched news using a Retrieval-Augmented Generation (RAG) model.
 
 ## Features
 - **Real-Time Data Fetching:** 
   - Scrapes news from over 60+ websites using Selenium for web scraping.
   - Extracts and parses relevant news using Llama 3.2 LLM.
+
   
 - **Sentiment Analysis:** 
   - Utilizes the finBERT text classification model to classify news as "positive," "negative," or "neutral."

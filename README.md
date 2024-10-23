@@ -1,85 +1,84 @@
-# SAP Stock Application
+# Stock News Sentiment Analysis Platform
 
-## Welcome to the SAP Stock Application! This application provides real-time insights into stock performance, company news, and market trends through an intuitive interface and AI-powered chatbot.
+This platform provides real-time sentiment analysis on stock-related news. It fetches news from over 60 different sources and performs sentiment classification. Additionally, it integrates an AI chatbot that allows users to query the fetched news using a Retrieval-Augmented Generation (RAG) model.
 
-# Features
+## Features
+- **Real-Time Data Fetching:** 
+  - Scrapes news from over 60+ websites using Selenium for web scraping.
+  - Extracts and parses relevant news using Llama 3.2 LLM.
+  
+- **Sentiment Analysis:** 
+  - Utilizes the finBERT text classification model to classify news as "positive," "negative," or "neutral."
 
-## User Interface
+- **AI Chatbot for News Querying:**
+  - Implements a RAG-based AI chatbot using Langchain and ChromaDB.
+  - Utilizes the Gemini-1.5-Flash LLM as the base model for natural language querying of news articles.
 
-- Clean and intuitive design for effortless navigation
-- Responsive layout for seamless mobile and desktop experiences
+## Technology Stack
 
-## Stock Insights
-
-- Real-time stock price changes and percentage changes
-- Company news, including earnings calls and significant announcements
-- Historical stock data for in-depth analysis
-
-## Market Trends
-
-- General market movements and sector performances
-- Personalized market news and updates
-
-## AI Chatbot
-
-- Instant answers to stock price and market trend queries
-- Support for natural language processing (NLP) for effortless interactions
-
-# Technologies Used
-
-## Frontend
-
-- HTML5
-- CSS3
-- JavaScript (ES6+)
-- React (with Redux for state management)
-
-## Backend
-
-- Node.js with Express.js framework
-- RESTful API for seamless data exchange
-
-## AI Chatbot
-
-- OpenAI GPT-3 for natural language processing
-- Integrated with SAP APIs for real-time data
+- **Selenium:** Used for web scraping to fetch real-time news data from various websites.
+- **Langchain:** Framework for building the RAG-based AI chatbot.
+- **ChromaDB:** Vector database used for efficient semantic search and document retrieval.
+- **Ollama API & Gemini API Platform:** For handling and deploying LLM models like Gemini-1.5-Flash for chatbot functionality.
+- **Llama 3.2 LLM:** Used to parse HTML responses and extract relevant news articles.
+- **finBERT:** Specialized model for sentiment analysis in financial texts, classifying news as positive, negative, or neutral.
 
 ## Installation
 
-1. Clone the repository: `git clone (link unavailable)
-2. Navigate to the project directory: cd sap-stock
-3. Install dependencies:
-    - For Node.js: npm install
-    - For Python (if applicable): pip install -r requirements.txt
-4. Run the application:
-    - For Node.js: npm start
-    - For Python (if applicable): python (link unavailable)
-5. Access the application: http://localhost:3000 (or specified port)
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/stock-news-sentiment-analysis-platform.git
+   cd stock-news-sentiment-analysis-platform
+   ```
 
-Usage
+2. **Set up a virtual environment (optional but recommended):**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 
-Stock Ticker
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- Enter stock symbol (e.g., AAPL) for real-time insights
+4. **Configure API keys/Model Manifests:**
+   - You need to set up environment variables or configuration files for the following APIs:
+     - **Gemini API** (for querying news)
+     - **Ollama Instance** (for Llama 3.2 LLM)
+     - **finBERT** (for sentiment classification)
 
-AI Chatbot
+5. **Run the application:**
+   ```bash
+   python main.py
+   ```
 
-- Interact using natural language (e.g., "What's Apple's current stock price?")
-- Example queries:
-    - "Show me Tesla's latest earnings report."
-    - "What's the current trend in the Dow Jones?"
+## Usage
 
-Tips
+### 1. **Fetching and Analyzing Stock News**
+   The platform scrapes real-time stock news and performs sentiment analysis using finBERT. The classified news is stored in a database for querying and further analysis.
 
-- Use the chatbot for quick answers
-- Explore historical data for in-depth analysis
+### 2. **Querying News with AI Chatbot**
+   The platform includes a chatbot interface where users can query the news using natural language. The chatbot uses Langchain's RAG model with ChromaDB and the Gemini-1.5-Flash LLM to deliver contextual answers based on the news.
 
-Contributing
+   Example queries:
+   - "What is the latest news about Tesla?"
+   - "Show me positive news on Apple stock."
 
-Contributions are welcome! Follow these steps:
+## Project Structure
 
-1. Fork the repository.
-2. Create a new branch (git checkout -b feature-branch).
-3. Make changes and commit (git commit -m 'Add new feature').
-4. Push to the branch (git push origin feature-branch).
-5. Create a pull request.
+- `backend/app.py`: Contains Flask backend server.
+- `backend/bot.py`: Code for RAG Pipeline.
+- `backend/sentiment_analysis.py`: Inference on finBERT text classification model.
+- `backend/web_scrape.py`:Contain data fetching pipeline to scrape latest news and save to scraped_news.json.
+- `frontend/`:Reactjs library for frontend .
+
+## Future Improvements
+
+- Add more advanced NLP models for better parsing of financial data.
+- Expand sentiment classification to handle more nuanced market sentiments like "bullish" and "bearish."
+- Integrate with more news sources for broader coverage.
+
+## Contributing
+
+Feel free to contribute by opening issues or submitting pull requests!

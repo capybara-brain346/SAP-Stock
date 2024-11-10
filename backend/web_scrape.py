@@ -23,7 +23,7 @@ class NewsScrapper:
         self.site = site
         self.ticker = ticker
         self.url = self.site + self.ticker
-        self.queue = queue.Queue(maxsize=5)
+        self.queue = queue.Queue(maxsize=3)
 
         options = Options()
         # options.add_argument("--headless")
@@ -32,11 +32,6 @@ class NewsScrapper:
         options.add_argument("--disable-gpu")
         options.add_argument("--enable-unsafe-swiftshader")
 
-        user_agents = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124 Safari/537.36",
-            ...,
-        ]
-        options.add_argument(f"user-agent={random.choice(user_agents)}")
         self.driver = webdriver.Chrome(options=options)
 
     def scrape_links(self) -> None:
@@ -58,9 +53,9 @@ class NewsScrapper:
 
     def extract_body_content(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
-        body_content = soup.body
+        body_content = soup.find_all("p")
         if body_content:
-            return str(body_content)
+            return "".join(p.get_text() for p in body_content)
         return ""
 
     def clean_body_content(self, body_content):
@@ -70,7 +65,7 @@ class NewsScrapper:
             script_or_style.extract()
 
         cleaned_content = soup.get_text(separator="\n")
-        cleaned_content = "\n".join(
+        cleaned_content = " ".join(
             line.strip() for line in cleaned_content.splitlines() if line.strip()
         )
 
@@ -82,12 +77,10 @@ class NewsScrapper:
             for i in range(0, len(dom_content), max_length)
         ]
 
-    def parse_with_model(self, dom_chunks, parse_description):
+    def parse_with_model(self, dom_chunks):
         template = (
-            "You are tasked with extracting specific information from the following text content: {dom_content}. "
             "Please follow these instructions carefully: \n\n"
-            "1. **Extract Information:** Only extract the information that you think directly matches the provided description: {parse_description}. "
-            "2. **Empty Response:** If no information matches the description, return an empty string ('')."
+            "Here is a text passage containing important information. Please analyze it, identify the main ideas, and summarize key details in a clear, organized format. Use bullet points for clarity and include any notable entities, dates, numbers, or themes mentioned. Finally, provide a brief explanation of the overall purpose or intent of the text.:{dom_content}"
         )
 
         print("Using Ollama for parsing...")
@@ -99,12 +92,9 @@ class NewsScrapper:
 
         parsed_results = []
 
-        for i, chunk in enumerate(dom_chunks, start=1):
-            response = chain.invoke(
-                {"dom_content": chunk, "parse_description": parse_description}
-            )
-            print(f"Parsed batch: {i} of {len(dom_chunks)}")
-            parsed_results.append(response)
+        response = chain.invoke({"dom_content": dom_chunks})
+        print("Parsed")
+        parsed_results.append(response)
 
         return " ".join(parsed_results)
 
@@ -125,12 +115,13 @@ class NewsScrapper:
                 writer.writerow([link, split_dom_content])
                 time.sleep(random.uniform(1, 2))
 
+        self.driver.close()
+
         with open("scraped_text.csv", "r", encoding="utf-8") as file:
             reader = csv.DictReader(file, delimiter="|")
             for row in reader:
                 parsed_result = self.parse_with_model(
-                    split_dom_content,
-                    "Give me any News/Articles/Posts that are contained in this corpus of text",
+                    row["content"],
                 )
                 results.append({"link": row["link"], "parsed_result": parsed_result})
 
@@ -138,8 +129,6 @@ class NewsScrapper:
             r"backend\data\scraped_results.json", "w", encoding="utf-8"
         ) as json_file:
             json.dump(results, json_file, indent=4)
-
-        self.driver.close()
 
         return results
 

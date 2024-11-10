@@ -1,7 +1,4 @@
-# Use a pipeline as a high-level helper
 from typing import List
-
-# Load model directly
 from transformers import pipeline, AutoTokenizer
 import torch
 
@@ -21,9 +18,7 @@ class SentimentAnalysis:
             device=device,
         )
 
-        max_token_length = (
-            self.tokenizer.model_max_length
-        )  
+        max_token_length = self.tokenizer.model_max_length
         results = []
 
         for text_item in self.text:
@@ -34,9 +29,6 @@ class SentimentAnalysis:
         return results
 
     def split_into_chunks(self, text, max_length=512):
-        """
-        Splits a long text into smaller chunks that fit within the model's token limit (512 tokens).
-        """
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True)
         input_ids = inputs["input_ids"][0]
 

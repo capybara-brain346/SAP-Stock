@@ -1,20 +1,7 @@
-from chromadb import PersistentClient
+import requests
 
-def list_existing_collections():
-    try:
-        chroma_client = PersistentClient(path="chroma_stock")
-        
-        # Get existing collections
-        existing_collections = chroma_client.list_collections()
-        
-        # Extract and print collection names
-        collection_names = [collection.name for collection in existing_collections]
-        print("Existing collections:", collection_names)
-        
-        return collection_names
-    except Exception as e:
-        print(f"Error listing collections: {e}")
-        return []
-
-# Example usage
-existing_collections = list_existing_collections()
+print(
+    requests.get(
+        "https://news.google.com/read/CBMilgFBVV95cUxQeEZ4MkZSbno2RE41S214RmpzRzA2RmdBT0M5U0kybktXZTZyZzZKM1pGRTdxaFZTZE1EUXMteEJUZnQ2ZzFmbDl4bHUwaWxfYmhPbUltVC1lcXBreEpCTHJzTkVuMGhjSFlLbmc2SmlCYmJuaDJpM0M3cFdGUXVXdTROU0lJMkdZQUFZQXV5VFpQcmlNQ3c?hl=en-IN&amp;gl=IN&amp;ceid=IN%3Aen"
+    ).text
+)

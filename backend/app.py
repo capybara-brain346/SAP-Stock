@@ -6,12 +6,22 @@ from web_scrape import NewsScrapper
 import json
 from bot import query_rag
 import logging
-import json
 from chromadb import PersistentClient
 import time
 
 app = Flask(__name__)
 CORS(app)
+
+COLLECTION_NAME = "langchain"
+
+
+def delete_chroma_collection():
+    try:
+        chroma_client = PersistentClient(path="chroma_stock")
+        chroma_client.delete_collection(COLLECTION_NAME)
+        print(f"Collection {COLLECTION_NAME} deleted successfully.")
+    except Exception as e:
+        raise Exception(f"Unable to delete collection: {e}")
 
 
 @app.route("/query", methods=["POST"])
@@ -56,33 +66,17 @@ def stock():
         return jsonify({"error": str(e)}), 500
 
 
-import os
-import shutil
-
-COLLECTION_NAME = "langchain"
-
-
-def delete_chroma_collection():
-    try:
-        chroma_client = PersistentClient(path="chroma_stock")  # Initialize the PersistentClient
-        chroma_client.delete_collection(COLLECTION_NAME)  # Delete the specified collection
-        print(f"Collection {COLLECTION_NAME} deleted successfully.")
-    except Exception as e:
-        raise Exception(f"Unable to delete collection: {e}")
-
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
-    # Attempt to delete the Chroma database with retry logic
     retries = 5
     for attempt in range(retries):
         try:
-            delete_chroma_collection()  # Attempt to delete the collection
-            break  # Exit loop if successful
+            delete_chroma_collection()
+            break
         except Exception as e:
             print(f"Attempt {attempt + 1}: {e}")
-            time.sleep(1)  # Wait before retrying
+            time.sleep(1)
 
-    # Fetch stock data
     stock = yf.Ticker(symbol)
     data = stock.history(period="1mo")
 
@@ -93,7 +87,6 @@ def stock_data(symbol):
     labels = list(prices.keys())
     values = list(prices.values())
 
-    # Run the news scraper
     NewsScrapper(site="https://finviz.com/quote.ashx?t=", ticker=symbol).run_scrapper()
 
     return jsonify({"labels": labels, "values": values})

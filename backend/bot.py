@@ -23,7 +23,7 @@ def query_rag(question: str) -> str:
     {question}
     """
     try:
-        news_file = r"backend\data\scraped_results.json"
+        news_file = "backend\\news_file.csv"
         news_context = ""
 
         with open(news_file, "r", encoding="utf-8") as f:
@@ -34,9 +34,8 @@ def query_rag(question: str) -> str:
             embedding_function=GoogleGenerativeAIEmbeddings(
                 model="models/embedding-001"
             ),
+            collection_name="stock_news",
         )
-
-        
 
         db.add_texts([news_context])
 
@@ -61,7 +60,9 @@ def query_rag(question: str) -> str:
 
 
 def main() -> None:
-    question = "What is the overall sentiment for the stock/company in the latest quarter?"
+    question = (
+        "What is the overall sentiment for the stock/company in the latest quarter?"
+    )
 
     print(query_rag(question=question))
 

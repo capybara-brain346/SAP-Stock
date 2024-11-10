@@ -1,3 +1,5 @@
+import csv
+import os
 from flask import Flask, request, jsonify
 import yfinance as yf
 from flask_cors import CORS
@@ -11,11 +13,9 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-#commitment issues
-##heavy 
+COLLECTION_NAME = "stock_news"
 
-# Initialize NewsAPI client with your API key
-newsapi = NewsApiClient(api_key='key')
+newsapi = NewsApiClient(api_key=os.getenv("NEWS_API_KEY"))
 
 
 @app.route("/query", methods=["POST"])
@@ -64,13 +64,10 @@ def stock():
         return jsonify({"error": str(e)}), 500
 
 
-COLLECTION_NAME = "langchain"
-
-
 def delete_chroma_collection():
     try:
-        chroma_client = PersistentClient(path="chroma_stock")  # Initialize the PersistentClient
-        chroma_client.delete_collection(COLLECTION_NAME)  # Delete the specified collection
+        chroma_client = PersistentClient(path="chroma_stock")
+        chroma_client.delete_collection(COLLECTION_NAME)
         print(f"Collection {COLLECTION_NAME} deleted successfully.")
     except Exception as e:
         raise Exception(f"Unable to delete collection: {e}")
@@ -79,14 +76,14 @@ def delete_chroma_collection():
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
     # Attempt to delete the Chroma database with retry logic
-    retries = 5
-    for attempt in range(retries):
-        try:
-            delete_chroma_collection()  # Attempt to delete the collection
-            break  # Exit loop if successful
-        except Exception as e:
-            print(f"Attempt {attempt + 1}: {e}")
-            time.sleep(1)  # Wait before retrying
+    # retries = 5
+    # for attempt in range(retries):
+    #     try:
+    #         delete_chroma_collection()  # Attempt to delete the collection
+    #         break  # Exit loop if successful
+    #     except Exception as e:
+    #         print(f"Attempt {attempt + 1}: {e}")
+    #         time.sleep(1)  # Wait before retrying
 
     # Fetch stock data
     stock = yf.Ticker(symbol)
@@ -109,15 +106,28 @@ def sentiment():
 
     # Validate symbol
     if not symbol:
-        return jsonify({"error": "Please provide a valid stock symbol for sentiment analysis."}), 400
+        return jsonify(
+            {"error": "Please provide a valid stock symbol for sentiment analysis."}
+        ), 400
 
     try:
         # Fetch news articles using NewsAPI, only for the provided symbol
         articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy")
-        news = [{"title": article["title"], "description": article["description"]} for article in articles["articles"]]
+        news = [
+            {"title": article["title"], "description": article["description"]}
+            for article in articles["articles"]
+        ]
+
+        with open("backend\\news_file.csv", "w", encoding="utf-8") as file:
+            writer = csv.writer(file, delimiter="|")
+            writer.writerow(["link", "content"])
+            for article in news:
+                writer.writerow([article["title"], article["description"]])
 
         # Extract titles and descriptions for sentiment analysis
-        all_parsed_results = [item["title"] + " " + (item["description"] or "") for item in news]
+        all_parsed_results = [
+            item["title"] + " " + (item["description"] or "") for item in news
+        ]
 
         if not all_parsed_results:
             return jsonify({"error": "No data found for sentiment analysis"}), 404
@@ -131,8 +141,8 @@ def sentiment():
 
         return jsonify(
             {
-                "sentiments": sentiment,
-                "links": links,
+                "sentiments": sentiment[0:5],
+                "links": links[0:5],
             }
         )
 

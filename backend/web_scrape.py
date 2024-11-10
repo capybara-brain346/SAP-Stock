@@ -1,4 +1,6 @@
+import csv
 import os
+import queue
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import json
@@ -9,29 +11,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 class NewsScrapper:
-    def __init__(self, site, ticker):
+    def __init__(self, site, ticker) -> None:
         self.site = site
         self.ticker = ticker
         self.url = self.site + self.ticker
-
-        # Start the Selenium driver
+        self.queue = queue.Queue(maxsize=5)
         self.driver = webdriver.Chrome()
 
-    def scrape_links(self):
+    def scrape_links(self) -> None:
         self.driver.get(self.url)
 
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
-        links = soup.find_all("a", class_="tab-link-news")
+        links = soup.find_all("a", class_="WwrzSb")
 
-        soup_list = [link.get("href") for link in links]
-        print(soup_list)
-
-        return soup_list[0:2]
+        for link in links:
+            self.queue.put(link.get("href"))
+        print("Scraped Links: ", self.queue)
 
     def scrape_website(self, url):
         print("Connecting to Scraping Browser...")
@@ -52,7 +52,6 @@ class NewsScrapper:
         for script_or_style in soup(["script", "style"]):
             script_or_style.extract()
 
-        # Get text or further process the content
         cleaned_content = soup.get_text(separator="\n")
         cleaned_content = "\n".join(
             line.strip() for line in cleaned_content.splitlines() if line.strip()
@@ -96,11 +95,15 @@ class NewsScrapper:
         results = []
 
         scraped_html = []
-        links = self.scrape_links()
+        self.scrape_links()
 
-        for link in links:
-            dom_content = self.scrape_website(link)
-            scraped_html.append(dom_content)
+        with open("scraped_text.csv", "w") as file:
+            writer = csv.writer(file, delimiter="|.|")
+            while not self.queue.empty():
+                link = self.queue.get()
+                dom_content = self.scrape_website(link)
+                writer.writerow(link, dom_content)
+
 
         for i, html in enumerate(scraped_html):
             body_content = self.extract_body_content(html)

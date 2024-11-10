@@ -3,12 +3,16 @@ import os
 import queue
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import random
+import time
 import json
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 # from langchain_google_genai import GoogleGenerativeAI
 
+csv.field_size_limit(10 * 1024 * 1024)
 load_dotenv()
 
 # GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -20,14 +24,27 @@ class NewsScrapper:
         self.ticker = ticker
         self.url = self.site + self.ticker
         self.queue = queue.Queue(maxsize=5)
-        self.driver = webdriver.Chrome()
+
+        options = Options()
+        # options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--enable-unsafe-swiftshader")
+
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124 Safari/537.36",
+            ...,
+        ]
+        options.add_argument(f"user-agent={random.choice(user_agents)}")
+        self.driver = webdriver.Chrome(options=options)
 
     def scrape_links(self) -> None:
         self.driver.get(self.url)
-
+        print("Got the website")
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
-
-        links = soup.find_all("a", class_="WwrzSb")
+        print("Finding links")
+        links = soup.find_all("a", class_="tab-link-news", limit=5)
 
         for link in links:
             self.queue.put(link.get("href"))
@@ -73,7 +90,7 @@ class NewsScrapper:
             "2. **Empty Response:** If no information matches the description, return an empty string ('')."
         )
 
-        print("Using Gemini API for parsing...")
+        print("Using Ollama for parsing...")
 
         # model = GoogleGenerativeAI(model="gemini-1.5-flash", api_key=GEMINI_API_KEY)
         model = OllamaLLM(model="llama3.2:3b")
@@ -94,28 +111,32 @@ class NewsScrapper:
     def run_scrapper(self):
         results = []
 
-        scraped_html = []
         self.scrape_links()
 
-        with open("scraped_text.csv", "w") as file:
-            writer = csv.writer(file, delimiter="|.|")
+        with open("scraped_text.csv", "w", encoding="utf-8") as file:
+            writer = csv.writer(file, delimiter="|")
+            writer.writerow(["link", "content"])
             while not self.queue.empty():
                 link = self.queue.get()
                 dom_content = self.scrape_website(link)
-                writer.writerow(link, dom_content)
+                body_content = self.extract_body_content(dom_content)
+                cleaned_content = self.clean_body_content(body_content)
+                split_dom_content = self.split_dom_content(cleaned_content)
+                writer.writerow([link, split_dom_content])
+                time.sleep(random.uniform(1, 2))
 
+        with open("scraped_text.csv", "r", encoding="utf-8") as file:
+            reader = csv.DictReader(file, delimiter="|")
+            for row in reader:
+                parsed_result = self.parse_with_model(
+                    split_dom_content,
+                    "Give me any News/Articles/Posts that are contained in this corpus of text",
+                )
+                results.append({"link": row["link"], "parsed_result": parsed_result})
 
-        for i, html in enumerate(scraped_html):
-            body_content = self.extract_body_content(html)
-            cleaned_content = self.clean_body_content(body_content)
-            split_dom_content = self.split_dom_content(cleaned_content)
-            parsed_result = self.parse_with_model(
-                split_dom_content,
-                "Give me any News/Articles/Posts that are contained in this corpus of text",
-            )
-            results.append({"link": links[i], "parsed_result": parsed_result})
-
-        with open(r"backend\data\scraped_results.json", "w") as json_file:
+        with open(
+            r"backend\data\scraped_results.json", "w", encoding="utf-8"
+        ) as json_file:
             json.dump(results, json_file, indent=4)
 
         self.driver.close()
@@ -124,5 +145,5 @@ class NewsScrapper:
 
 
 if __name__ == "__main__":
-    n = NewsScrapper("https://finviz.com/quote.ashx?t=", "AAPL")
-    print(n.run_scrapper())
+    n = NewsScrapper("https://finviz.com/quote.ashx?t=", "TSLA")
+    n.run_scrapper()

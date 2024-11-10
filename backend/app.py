@@ -75,7 +75,7 @@ def stock_data(symbol):
             break
         except Exception as e:
             print(f"Attempt {attempt + 1}: {e}")
-            time.sleep(1)  
+            time.sleep(1)
 
     stock = yf.Ticker(symbol)
     data = stock.history(period="1mo")
@@ -87,7 +87,7 @@ def stock_data(symbol):
     labels = list(prices.keys())
     values = list(prices.values())
 
-    NewsScrapper(site="https://news.google.com/search?q=", ticker=symbol).run_scrapper()
+    NewsScrapper(site="https://finviz.com/quote.ashx?t=", ticker=symbol).run_scrapper()
 
     return jsonify({"labels": labels, "values": values})
 

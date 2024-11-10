@@ -2,16 +2,17 @@ from flask import Flask, request, jsonify
 import yfinance as yf
 from flask_cors import CORS
 from sentiment_analysis import SentimentAnalysis
-from web_scrape import NewsScrapper
-import json
-from bot import query_rag
+from newsapi import NewsApiClient  # Import News API Client
 import logging
-import json
+from bot import query_rag
 from chromadb import PersistentClient
 import time
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize NewsAPI client with your API key
+newsapi = NewsApiClient(api_key='key')
 
 
 @app.route("/query", methods=["POST"])
@@ -21,7 +22,6 @@ def query():
 
     try:
         result = query_rag(question)
-
         return jsonify({"response": result})
     except Exception as e:
         logging.error(f"Error processing query: {e}")
@@ -30,7 +30,12 @@ def query():
 
 @app.route("/api/stock", methods=["GET"])
 def stock():
-    symbol = request.args.get("symbol", default="AAPL", type=str).upper()
+    symbol = request.args.get("symbol", default="AAPL", type=str).upper().strip()
+
+    # Check if symbol is provided
+    if not symbol:
+        return jsonify({"error": "Please provide a valid stock symbol."}), 400
+
     ticker = yf.Ticker(symbol)
 
     try:
@@ -56,9 +61,6 @@ def stock():
         return jsonify({"error": str(e)}), 500
 
 
-import os
-import shutil
-
 COLLECTION_NAME = "langchain"
 
 
@@ -69,6 +71,7 @@ def delete_chroma_collection():
         print(f"Collection {COLLECTION_NAME} deleted successfully.")
     except Exception as e:
         raise Exception(f"Unable to delete collection: {e}")
+
 
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
@@ -93,27 +96,35 @@ def stock_data(symbol):
     labels = list(prices.keys())
     values = list(prices.values())
 
-    # Run the news scraper
-    NewsScrapper(site="https://finviz.com/quote.ashx?t=", ticker=symbol).run_scrapper()
-
     return jsonify({"labels": labels, "values": values})
 
 
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
-    try:
-        with open(r"backend/data/scraped_results.json", "r") as file:
-            news = json.load(file)
+    data = request.json
+    symbol = data.get("symbol")
 
-        all_parsed_results = [item["parsed_result"] for item in news]
+    # Validate symbol
+    if not symbol:
+        return jsonify({"error": "Please provide a valid stock symbol for sentiment analysis."}), 400
+
+    try:
+        # Fetch news articles using NewsAPI, only for the provided symbol
+        articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy")
+        news = [{"title": article["title"], "description": article["description"]} for article in articles["articles"]]
+
+        # Extract titles and descriptions for sentiment analysis
+        all_parsed_results = [item["title"] + " " + (item["description"] or "") for item in news]
 
         if not all_parsed_results:
             return jsonify({"error": "No data found for sentiment analysis"}), 404
 
+        # Perform sentiment analysis on the fetched news
         sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
         print(sentiment)
 
-        links = [item["link"] for item in news if "link" in item]
+        # Collect the links of articles
+        links = [article["url"] for article in articles["articles"]]
 
         return jsonify(
             {

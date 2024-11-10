@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app)
 
 #commitment issues
-
+##heavy 
 
 # Initialize NewsAPI client with your API key
 newsapi = NewsApiClient(api_key='key')

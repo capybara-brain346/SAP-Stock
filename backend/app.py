@@ -99,50 +99,50 @@ def stock_data(symbol):
     return jsonify({"labels": labels, "values": values})
 
 
-@app.route("/api/sentiments", methods=["POST"])
 def sentiment():
     data = request.json
     symbol = data.get("symbol")
 
-    # Validate symbol
     if not symbol:
         return jsonify(
             {"error": "Please provide a valid stock symbol for sentiment analysis."}
         ), 400
 
     try:
-        # Fetch news articles using NewsAPI, only for the provided symbol
         articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy")
-        news = [
-            {"title": article["title"], "description": article["description"]}
-            for article in articles["articles"]
-        ]
+
+        def process_article(article):
+            title = article.get("title", "")
+            description = article.get("description", "")
+            url = article.get("url", "")
+            return {
+                "news": {"title": title, "description": description},
+                "parsed_result": f"{title} {description}",
+                "link": url,
+                "csv_row": [title, description],
+            }
+
+        processed_articles = list(map(process_article, articles["articles"]))
+
+        news = [item["news"] for item in processed_articles]
+        all_parsed_results = [item["parsed_result"] for item in processed_articles]
+        links = [item["link"] for item in processed_articles]
+        csv_rows = [item["csv_row"] for item in processed_articles]
 
         with open("backend\\news_file.csv", "w", encoding="utf-8") as file:
             writer = csv.writer(file, delimiter="|")
             writer.writerow(["link", "content"])
-            for article in news:
-                writer.writerow([article["title"], article["description"]])
-
-        # Extract titles and descriptions for sentiment analysis
-        all_parsed_results = [
-            item["title"] + " " + (item["description"] or "") for item in news
-        ]
+            writer.writerows(csv_rows)
 
         if not all_parsed_results:
             return jsonify({"error": "No data found for sentiment analysis"}), 404
 
-        # Perform sentiment analysis on the fetched news
         sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
-        print(sentiment)
-
-        # Collect the links of articles
-        links = [article["url"] for article in articles["articles"]]
 
         return jsonify(
             {
-                "sentiments": sentiment[0:5],
-                "links": links[0:5],
+                "sentiments": sentiment[:5],
+                "links": links[:5],
             }
         )
 

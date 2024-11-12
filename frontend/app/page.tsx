@@ -72,15 +72,15 @@ export default function Home() {
             setLoading(false);
         }
     };
-        // Function to format the response text
-const formatResponse = (text) => {
-    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<em><strong>$1</strong></em>");
-    text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
-    text = text.replace(/\n/g, "<br />");
-    return text;
-};
-
+    
+    // Function to format the response text
+    const formatResponse = (text) => {
+        text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<em><strong>$1</strong></em>");
+        text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        text = text.replace(/\n/g, "<br />");
+        return text;
+    };
 
     // Fetch chatbot response
     const fetchChatbotResponse = async () => {
@@ -149,7 +149,7 @@ const formatResponse = (text) => {
                         <h5 className="text-primary">WHY CHOOSE US</h5>
                         <h2 className="text-4xl font-extrabold my-4">Grow your portfolio with us</h2>
                         <p className="mx-auto my-4 text-sm w-full max-w-md bg-transparent text-center font-medium leading-relaxed tracking-wide text-muted-foreground">
-                            Our services are here to cater to your needs
+                            Our services are here to cater to your needs.
                         </p>
 
                         <div className="flex flex-col md:flex-row gap-4 mt-12">
@@ -178,7 +178,7 @@ const formatResponse = (text) => {
             </section>
 
             {/* Stock Price Input and Line Chart Section */}
-            <div className="flex flex-col items-center my-8">
+            <div className="flex flex-col items-center my-8" id="services">
             <h1 className="text-5xl mb-4 font-extrabold text-primary">Enter Stock Ticker </h1>
    
                 <input
@@ -212,10 +212,14 @@ const formatResponse = (text) => {
                     </ResponsiveContainer>
                 )}
 
+                {/* Empty half-page space for future content */}
+                <div className="h-[20vh]"></div>
+
                 {/* Display Sentiment Analysis Results */}
                 {sentimentAnalysisResults && (
-    <div className="mt-4">
-        <h3>Sentiment Analysis Results:</h3>
+    <div className="mt-4" id="about">
+        <h3 className="text-3xl mb-4 font-extrabold text-primary">Sentiment Analysis Results</h3>
+                    
         <table className="min-w-full border border-gray-300">
             <thead>
                 <tr>
@@ -246,35 +250,32 @@ const formatResponse = (text) => {
             </div>
 
             {/* Chatbot Section */}
+            {/* AI Chatbot Section (Only shows after stock data is fetched) */}
+            {currentPrice !== null && sentimentAnalysisResults && (
+                <div className="flex flex-col items-center my-8 bg-gradient-to-b from-background to-muted-foreground rounded-lg p-6 shadow-lg">
+                    <h3 className="text-3xl mb-4 font-extrabold text-primary">Ask Our AI Chatbot</h3>
+                    <p className="text-sm mb-4 max-w-md text-center text-muted-foreground">
+                        Have any questions about stock prices or the market? Our AI chatbot is here to help. Just type your question below.
+                    </p>
+                    <textarea
+                        value={userMessage}
+                        onChange={(e) => setUserMessage(e.target.value)}
+                        placeholder="Ask me anything..."
+                        className="w-full md:w-3/4 p-4 rounded-md border border-border bg-muted/90 text-white placeholder-white focus:ring-2 focus:ring-primary focus:outline-none mb-4"
+                        rows={4}
+                    />
+                    <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
+                        {loadingChatbot ? "Thinking..." : "Send"}
+                    </Button>
 
-            <div className="flex flex-col items-center my-8 bg-gradient-to-b from-background to-muted-foreground rounded-lg p-6 shadow-lg">
-    <h3 className="text-3xl mb-4 font-extrabold text-primary">Ask Our AI Chatbot</h3>
-    <p className="text-sm mb-4 max-w-md text-center text-muted-foreground">
-        Have any questions about stock prices or the market? Our AI chatbot is here to help. Just type your question below.
-    </p>
-    <textarea
-        value={userMessage}
-        onChange={(e) => setUserMessage(e.target.value)}
-        placeholder="Ask me anything..."
-        className="w-full md:w-3/4 p-4 rounded-md border border-border bg-muted/90 text-white placeholder-white focus:ring-2 focus:ring-primary focus:outline-none mb-4"
-        rows={4}
-    />
-    <Button onClick={fetchChatbotResponse} className="mt-2" disabled={loadingChatbot}>
-        {loadingChatbot ? "Thinking..." : "Send"}
-    </Button>
-
-
-{chatbotResponse && (
-    <div className="mt-4 w-full md:w-3/4 p-4 rounded-lg bg-card text-primary-foreground shadow-md">
-        <h4 className="font-bold text-lg">Chatbot Response:</h4>
-        <p className="mt-2 text-muted-foreground" dangerouslySetInnerHTML={{ __html: formatResponse(chatbotResponse) }} />
-    </div>
-)}
-
-</div>
-
-
-
+                    {chatbotResponse && (
+                        <div className="mt-4 w-full md:w-3/4 p-4 rounded-lg bg-card text-primary-foreground shadow-md">
+                            <h4 className="font-bold text-lg">Chatbot Response:</h4>
+                            <p className="mt-2 text-muted-foreground" dangerouslySetInnerHTML={{ __html: formatResponse(chatbotResponse) }} />
+                        </div>
+                    )}
+                </div>
+            )}
         </>
     );
 }

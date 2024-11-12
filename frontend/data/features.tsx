@@ -9,7 +9,7 @@ export const features = [
     },
     {
         title: "In Depth Insights",
-        description: "Our service is meant to best suit your needs.",
+        description: "Our service is meant to best suit your needs.Our team gathers in depth and valuable insights ",
         icon: <Pencil2Icon className="w-6 h-6"/>,
     },
     {

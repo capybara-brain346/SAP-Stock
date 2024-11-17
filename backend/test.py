@@ -1,7 +1,24 @@
-import requests
+from chromadb import PersistentClient
 
-print(
-    requests.get(
-        "https://news.google.com/read/CBMilgFBVV95cUxQeEZ4MkZSbno2RE41S214RmpzRzA2RmdBT0M5U0kybktXZTZyZzZKM1pGRTdxaFZTZE1EUXMteEJUZnQ2ZzFmbDl4bHUwaWxfYmhPbUltVC1lcXBreEpCTHJzTkVuMGhjSFlLbmc2SmlCYmJuaDJpM0M3cFdGUXVXdTROU0lJMkdZQUFZQXV5VFpQcmlNQ3c?hl=en-IN&amp;gl=IN&amp;ceid=IN%3Aen"
-    ).text
-)
+def list_chroma_collections(db_path="chroma_stock"):
+    try:
+        # Initialize the Chroma Persistent Client
+        chroma_client = PersistentClient(path=db_path)
+        
+        # Retrieve all collections
+        collections = chroma_client.list_collections()
+        
+        # Print the collection names
+        if collections:
+            print("Available collections:")
+            for collection in collections:
+                print(collection.name)
+        else:
+            print("No collections found in the Chroma database.")
+
+    except Exception as e:
+        print(f"Error retrieving collections: {e}")
+
+if __name__ == "__main__":
+    # Specify the path to the Chroma database
+    list_chroma_collections()

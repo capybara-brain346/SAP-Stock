@@ -76,14 +76,14 @@ def delete_chroma_collection():
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
     # Attempt to delete the Chroma database with retry logic
-    retries = 5
-    for attempt in range(retries):
-        try:
-            delete_chroma_collection()  # Attempt to delete the collection
-            break  # Exit loop if successful
-        except Exception as e:
-            print(f"Attempt {attempt + 1}: {e}")
-            time.sleep(1)  # Wait before retrying
+  #  retries = 5
+ #   for attempt in range(retries):
+ #       try:
+#            delete_chroma_collection()  # Attempt to delete the collection
+ #           break  # Exit loop if successful
+ #       except Exception as e:
+ #           print(f"Attempt {attempt + 1}: {e}")
+  #          time.sleep(1)  # Wait before retrying
 
     # Fetch stock data
     stock = yf.Ticker(symbol)
@@ -103,12 +103,14 @@ def stock_data(symbol):
 def sentiment():
     data = request.json
     symbol = data.get("symbol")
-
+    
+    symbol = symbol.upper().strip()
     # Validate symbol
     if not symbol:
         return jsonify(
             {"error": "Please provide a valid stock symbol for sentiment analysis."}
         ), 400
+
 
     try:
         # Fetch news articles using NewsAPI, only for the provided symbol

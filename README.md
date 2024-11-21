@@ -28,7 +28,7 @@ This platform provides real-time sentiment analysis on stock-related news. It fe
 - **Llama 3.2 LLM:** Used to parse HTML responses and extract relevant news articles.
 - **finBERT:** Specialized model for sentiment analysis in financial texts, classifying news as positive, negative, or neutral.
 
-## Installation
+## Installation (Without Docker)
 
 1. **Clone the repository:**
    ```bash
@@ -57,6 +57,48 @@ This platform provides real-time sentiment analysis on stock-related news. It fe
    ```bash
    python main.py
    ```
+# Using Docker
+
+The platform is containerized using Docker for easy setup and deployment. Here's how to run the platform with Docker:
+
+## Prerequisites
+
+Ensure you have the following installed:
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+---
+
+## Steps to Build and Run
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/stock-news-sentiment-analysis-platform.git
+cd stock-news-sentiment-analysis-platform
+```
+
+### 2. Set Up Environment Variables
+  Create a .env file in the root directory and add the required API keys:
+```bash
+NEWS_API_KEY=your_news_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+```
+
+### 3. Build and Start the Docker Containers
+  Run the following commands to build and start the services:
+```bash
+docker-compose up --build
+```
+This will:
+- Build the backend and frontend services.
+- Start the Flask backend on http://localhost:5000.
+- Start the ReactJS frontend on http://localhost:3000
+
+### 4. 4. Access the Platform
+  Open your browser and navigate to:
+- Frontend: http://localhost:3000
+- Backend (API): http://localhost:5000
 
 ## Usage
 

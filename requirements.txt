@@ -58,6 +58,7 @@ google-generativeai==0.8.3
 googleapis-common-protos==1.65.0
 grpcio==1.67.1
 grpcio-status==1.67.1
+gunicorn==23.0.0
 h11==0.14.0
 html5lib==1.1
 httpcore==1.0.6
@@ -205,10 +206,3 @@ yarl==1.17.1
 yfinance==0.2.48
 zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1726248574750/work
 zstandard @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_cairdg5u3o/croot/zstandard_1728569200438/work
-langchain
-langchain_chroma
-langchain_google_genai
-python-dotenv
-bs4
-requests
-gunicorn

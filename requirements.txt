@@ -4,3 +4,4 @@ langchain_google_genai
 python-dotenv
 bs4
 requests
+gunicorn

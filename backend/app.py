@@ -98,73 +98,51 @@ def stock_data(symbol):
 
     return jsonify({"labels": labels, "values": values})
 
-
 @app.route("/api/sentiments", methods=["POST"])
 def sentiment():
     data = request.json
-    symbol = data.get("symbol")
+    symbol = data.get("symbol", "").upper().strip()
 
-    symbol = symbol.upper().strip()
-    # Validate symbol
     if not symbol:
-        return jsonify(
-            {"error": "Please provide a valid stock symbol for sentiment analysis."}
-        ), 400
+        return jsonify({"error": "Please provide a valid stock symbol for sentiment analysis."}), 400
 
     try:
-        articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy")
+        # Fetch top 3 latest news articles
+        latest_articles = newsapi.get_everything(q=symbol, language="en", sort_by="publishedAt", page_size=3)
+        latest_news = [
+            {"title": article["title"], "description": article.get("description", ""), "url": article["url"]}
+            for article in latest_articles.get("articles", [])
+        ]
 
-        def process_article(article):
-            title = article.get("title", "")
-            description = article.get("description", "")
-            url = article.get("url", "")
-            return {
-                "news": {"title": title, "description": description},
-                "parsed_result": f"{title} {description}",
-                "link": url,
-                "csv_row": [title, description],
-            }
+        # Fetch top 3 most relevant news articles
+        relevant_articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy", page_size=3)
+        relevant_news = [
+            {"title": article["title"], "description": article.get("description", ""), "url": article["url"]}
+            for article in relevant_articles.get("articles", [])
+        ]
 
-        processed_articles = list(map(process_article, articles["articles"]))
+        # Combine and remove duplicates
+        combined_news = {article["url"]: article for article in latest_news + relevant_news}.values()
+        limited_news = list(combined_news)[:5]  # Limit to top 5 unique articles
 
-        news = [item["news"] for item in processed_articles]
-        all_parsed_results = [item["parsed_result"] for item in processed_articles]
-        links = [item["link"] for item in processed_articles]
-        csv_rows = [item["csv_row"] for item in processed_articles]
+        # Extract content for sentiment analysis
+        news_texts = [f"{article['title']} {article['description']}" for article in limited_news]
 
-        with open("backend\\news_file.csv", "w", encoding="utf-8") as file:
-            writer = csv.writer(file, delimiter="|")
-            writer.writerow(["link", "content"])
-            writer.writerows(csv_rows)
+        # Perform sentiment analysis
+        sentiment = SentimentAnalysis(news_texts).sentiment_analysis()
 
-        if not all_parsed_results:
-            return jsonify({"error": "No data found for sentiment analysis"}), 404
-
-        sentiment = SentimentAnalysis(all_parsed_results).sentiment_analysis()
+        # Extract article URLs
+        links = [article["url"] for article in limited_news]
 
         return jsonify(
             {
-                "sentiments": sentiment[:5],
-                "links": links[:5],
+                "sentiments": sentiment,  # Sentiment results
+                "links": links,  # News links
             }
         )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/chatbot", methods=["POST"])
-def chatbot():
-    data = request.json
-    question = data.get("question")
-
-    if not question:
-        return jsonify({"error": "Please provide a question."}), 400
-
-    response = query_rag(question)
-
-    return jsonify({"response": response})
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

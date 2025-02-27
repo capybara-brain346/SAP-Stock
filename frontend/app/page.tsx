@@ -8,12 +8,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export default function Home() {
     const [stock1, setStock1] = useState("");
     const [stock2, setStock2] = useState("");
-    const [historicalData, setHistoricalData] = useState<Record<string, any>>({});
+    const [historicalData, setHistoricalData] = useState([]);
     const [sentimentData, setSentimentData] = useState<Record<string, any>>({});
     const [loadingData, setLoadingData] = useState(false);
     const [loadingSentiment, setLoadingSentiment] = useState(false);
 
-    // ✅ Fetch stock price trends for both stocks
+    // ✅ Fetch last 30 trading days for both stocks
     const fetchStockComparison = async () => {
         if (!stock1 || !stock2) {
             alert("Please enter two stock symbols.");
@@ -27,10 +27,19 @@ export default function Home() {
                 axios.get(`http://127.0.0.1:5000/stock_data/${stock2}`)
             ]);
 
-            setHistoricalData({
-                [stock1]: response1.data.values.map((value: number, index: number) => ({ name: `Day ${index + 1}`, price: value })),
-                [stock2]: response2.data.values.map((value: number, index: number) => ({ name: `Day ${index + 1}`, price: value }))
-            });
+            // ✅ Convert timestamps to real dates & align both stocks
+            const formatStockData = (data: any, symbol: string) =>
+                Object.entries(data.values)
+                    .slice(-30) // Get last 30 trading days
+                    .map(([date, price]) => ({
+                        date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                        [symbol]: price, // Store under stock symbol
+                    }));
+
+            // ✅ Merge both stocks based on date
+            const mergedData = mergeStockData(formatStockData(response1.data, stock1), formatStockData(response2.data, stock2));
+
+            setHistoricalData(mergedData);
 
         } catch (error) {
             console.error("Error fetching stock data:", error);
@@ -39,7 +48,15 @@ export default function Home() {
         }
     };
 
-    // ✅ Fetch sentiment analysis for both stocks
+    // ✅ Merge stock data by date
+    const mergeStockData = (data1: any[], data2: any[]) => {
+        const mergedMap: Record<string, any> = {};
+        data1.forEach(entry => mergedMap[entry.date] = { ...mergedMap[entry.date], ...entry });
+        data2.forEach(entry => mergedMap[entry.date] = { ...mergedMap[entry.date], ...entry });
+        return Object.values(mergedMap);
+    };
+
+    // ✅ Fetch sentiment comparison for both stocks
     const fetchSentimentComparison = async () => {
         if (!stock1 || !stock2) {
             alert("Please enter two stock symbols.");
@@ -49,7 +66,6 @@ export default function Home() {
         setLoadingSentiment(true);
         try {
             const response = await axios.post("http://127.0.0.1:5000/api/sentiment_comparison", { symbols: [stock1, stock2] });
-            console.log("DEBUG: Sentiment Comparison API Response:", response.data);
             setSentimentData(response.data);
         } catch (error) {
             console.error("Error fetching sentiment comparison:", error);
@@ -90,35 +106,54 @@ export default function Home() {
                     </Button>
                 </div>
 
-                {/* Stock Price Comparison */}
-                {Object.keys(historicalData).length > 0 && (
+                {/* ✅ Stock Price Comparison (Last 30 Days) */}
+                {historicalData.length > 0 && (
                     <div className="my-8">
-                        <h2 className="text-3xl font-bold">Stock Price Trends</h2>
+                        <h2 className="text-3xl font-bold">Stock Price Trends (Last 30 Days)</h2>
                         <ResponsiveContainer width="100%" height={400}>
-                            <LineChart>
+                            <LineChart data={historicalData}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
+                                <XAxis dataKey="date" />
                                 <YAxis />
                                 <Tooltip />
-                                {Object.keys(historicalData).map((symbol, index) => (
-                                    <Line
-                                        key={symbol}
-                                        type="monotone"
-                                        dataKey="price"
-                                        data={historicalData[symbol]}
-                                        stroke={["#FF5733", "#4287f5"][index]} // Different colors for different stocks
-                                        name={symbol}
-                                    />
-                                ))}
+                                <Line type="monotone" dataKey={stock1} stroke="#FF5733" name={stock1} />
+                                <Line type="monotone" dataKey={stock2} stroke="#4287f5" name={stock2} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
                 )}
 
-                {/* Sentiment Comparison */}
+                {/* ✅ Sentiment Comparison Table */}
                 {Object.keys(sentimentData).length > 0 && (
                     <div className="my-8">
                         <h2 className="text-3xl font-bold">Sentiment Comparison</h2>
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse border border-gray-300">
+                                <thead>
+                                    <tr className="bg-gray-200">
+                                        <th className="border border-gray-300 p-2">Stock</th>
+                                        <th className="border border-gray-300 p-2">Positive</th>
+                                        <th className="border border-gray-300 p-2">Neutral</th>
+                                        <th className="border border-gray-300 p-2">Negative</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.keys(sentimentData).map((symbol) => {
+                                        const sentimentCounts = sentimentData[symbol]?.sentiment_counts || {};
+                                        return (
+                                            <tr key={symbol} className="text-center">
+                                                <td className="border border-gray-300 p-2 font-bold">{symbol.toUpperCase()}</td>
+                                                <td className="border border-gray-300 p-2">{sentimentCounts.positive || 0}</td>
+                                                <td className="border border-gray-300 p-2">{sentimentCounts.neutral || 0}</td>
+                                                <td className="border border-gray-300 p-2">{sentimentCounts.negative || 0}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* ✅ Sentiment Bar Chart */}
                         <ResponsiveContainer width="100%" height={400}>
                             <BarChart data={Object.keys(sentimentData).map((symbol) => ({
                                 name: symbol.toUpperCase(),

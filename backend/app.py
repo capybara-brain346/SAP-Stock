@@ -13,6 +13,11 @@ CORS(app)
 # Load NewsAPI Key
 newsapi = NewsApiClient(api_key=os.getenv("NEWS_API_KEY"))
 
+def clean_symbol_for_newsapi(symbol):
+    if symbol.upper().endswith(".NS") or symbol.upper().endswith(".BO"):
+        return symbol.rsplit(".", 1)[0]  # Remove the extension
+    return symbol
+
 # ✅ Route: Get Stock Price
 @app.route("/api/stock", methods=["GET"])
 def stock():
@@ -62,8 +67,10 @@ def sentiment_comparison():
 
     for symbol in symbols:
         try:
+            newsapi_symbol = clean_symbol_for_newsapi(symbol)  # Remove .NS or .BO for NewsAPI
+            
             # Fetch news articles
-            articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy")
+            articles = newsapi.get_everything(q=newsapi_symbol, language="en", sort_by="relevancy")
 
             parsed_results = [f"{article['title']} {article['description']}" for article in articles["articles"]]
             links = [article["url"] for article in articles["articles"]]

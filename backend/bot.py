@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+GOOGLE_API_KEY = "<your key here>"
+
 def query_rag(question: str) -> str:
     PROMPT_TEMPLATE = """
     You are an assistant providing sentiment analysis and stock market news summaries.
@@ -23,7 +25,7 @@ def query_rag(question: str) -> str:
     {question}
     """
     try:
-        news_file = "backend\\news_file.csv"
+        news_file = "news_file.csv"
         news_context = ""
 
         with open(news_file, "r", encoding="utf-8") as f:

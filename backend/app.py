@@ -10,7 +10,6 @@ from newsapi.newsapi_exception import NewsAPIException
 from sentiment_analysis import SentimentAnalysis
 from bot import query_rag
 from chromadb import PersistentClient
-from bot import query_rag
 
 app = Flask(__name__)
 CORS(app)  # Allow Cross-Origin Requests
@@ -29,10 +28,6 @@ def clean_symbol_for_newsapi(symbol):
     """Removes `.NS` or `.BO` extensions for NewsAPI compatibility."""
     return symbol.rsplit(".", 1)[0] if symbol.upper().endswith((".NS", ".BO")) else symbol
 
-def clean_symbol_for_newsapi(symbol):
-    if symbol.upper().endswith(".NS") or symbol.upper().endswith(".BO"):
-        return symbol.rsplit(".", 1)[0]  # Remove the extension
-    return symbol
 
 @app.route("/query", methods=["POST"])
 def query():
@@ -50,6 +45,7 @@ def query():
         logging.error(f"Error processing query: {e}")
         return jsonify({"error": "An error occurred while processing your query."}), 500
 
+
 @app.route("/api/stock", methods=["GET"])
 def stock():
     """Fetches stock data from Yahoo Finance."""
@@ -61,7 +57,6 @@ def stock():
     try:
         ticker = yf.Ticker(symbol)
         quote = ticker.info
-        print(quote)
 
         if "regularMarketOpen" in quote:
             return jsonify({
@@ -71,38 +66,19 @@ def stock():
                 "error": None,
             }), 200
         else:
-            return jsonify(
-                {"error": "Stock not found or no current price available"}
-            ), 404
+            return jsonify({"error": "Stock not found or no current price available"}), 404
+
     except Exception as e:
-        print("Error fetching data:", e)
+        logging.error(f"Error fetching stock data: {e}")
         return jsonify({"error": str(e)}), 500
-
-
-def delete_chroma_collection():
-    try:
-        chroma_client = PersistentClient(path="chroma_stock")
-        chroma_client.delete_collection(COLLECTION_NAME)
-        print(f"Collection {COLLECTION_NAME} deleted successfully.")
-    except Exception as e:
-        raise Exception(f"Unable to delete collection: {e}")
 
 
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
-    # Attempt to delete the Chroma database with retry logic
-    #  retries = 5
-    #   for attempt in range(retries):
-    #       try:
-    #            delete_chroma_collection()  # Attempt to delete the collection
-    #           break  # Exit loop if successful
-    #       except Exception as e:
-    #           print(f"Attempt {attempt + 1}: {e}")
-    #          time.sleep(1)  # Wait before retrying
-
-    # Fetch stock data
-    stock = yf.Ticker(symbol)
-    data = stock.history(period="1mo")
+    """Fetches historical stock data."""
+    try:
+        stock = yf.Ticker(symbol)
+        data = stock.history(period="1mo")
 
         if data.empty:
             return jsonify({"error": "No data found for the symbol provided."}), 404
@@ -112,6 +88,7 @@ def stock_data(symbol):
         values = list(prices.values())
 
         return jsonify({"labels": labels, "values": values})
+
     except Exception as e:
         logging.error(f"Error fetching stock history: {e}")
         return jsonify({"error": str(e)}), 500
@@ -129,13 +106,13 @@ def sentiment():
     try:
         # Fetch top 3 latest news articles
         latest_articles = newsapi.get_everything(q=symbol, language="en", sort_by="publishedAt", page_size=3)
+        relevant_articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy", page_size=3)
+
+        # Process articles
         latest_news = [
             {"title": article["title"], "description": article.get("description", ""), "url": article["url"]}
             for article in latest_articles.get("articles", [])
         ]
-
-        # Fetch top 3 most relevant news articles
-        relevant_articles = newsapi.get_everything(q=symbol, language="en", sort_by="relevancy", page_size=3)
         relevant_news = [
             {"title": article["title"], "description": article.get("description", ""), "url": article["url"]}
             for article in relevant_articles.get("articles", [])
@@ -144,6 +121,9 @@ def sentiment():
         # Combine and remove duplicates
         combined_news = {article["url"]: article for article in latest_news + relevant_news}.values()
         limited_news = list(combined_news)[:5]  # Limit to top 5 unique articles
+
+        if not limited_news:
+            return jsonify({"error": "No relevant news articles found."}), 404
 
         # Extract content for sentiment analysis
         news_texts = [f"{article['title']} {article['description']}" for article in limited_news]
@@ -160,6 +140,11 @@ def sentiment():
                 "links": links,  # News links
             }
         )
+
+    except NewsAPIException as e:
+        error_data = e.args[0]
+        if error_data.get("code") == "rateLimited":
+            return jsonify({"error": "NewsAPI request limit reached. Try again later."}), 429
 
     except Exception as e:
         logging.error(f"Error in sentiment analysis: {e}")
